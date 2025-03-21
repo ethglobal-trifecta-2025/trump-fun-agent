@@ -1,10 +1,11 @@
 import { BaseMessage } from "@langchain/core/messages";
 import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
+import { filterProcessedTruthSocialPosts } from "./tools/filter-processed-truth-social-posts";
+import { generateBettingPoolIdeas } from "./tools/generate-betting-pool-ideas";
 import { getLatestTruthSocialPosts } from "./tools/get-latest-truth-social-posts";
-import { newsApiSearchFunction } from "./tools/news-api";
-import { extractSearchQueryFunction } from "./tools/search-query";
 import { setOriginalMessageFunction } from "./tools/set-original-message";
-import { tavilySearchFunction } from "./tools/tavily-search";
+import { upsertTruthSocialPosts } from "./tools/upsert-truth-social-posts";
+import type { ResearchItem } from "./types/research-item";
 
 const AgentStateAnnotation = Annotation.Root({
   originalMessage: Annotation<string>,
@@ -14,8 +15,10 @@ const AgentStateAnnotation = Annotation.Root({
   tavilySearchResults: Annotation<object>, //TODO get a better type here
   newsApiSearchResults: Annotation<object>, //TODO get a better type here
   newsApiSearchFailed: Annotation<boolean>,
-  truthSocialPosts: Annotation<any>, // Will be updated with proper type later
-  bettingPoolIdea: Annotation<string>,
+  research: Annotation<ResearchItem[]>({
+    reducer: (curr, update) => [...curr, ...update],
+    default: () => [],
+  }),
   messages: Annotation<BaseMessage[]>({
     reducer: (curr, update) => [...curr, ...update],
     default: () => [],
@@ -25,6 +28,12 @@ const AgentStateAnnotation = Annotation.Root({
 // Define type alias for State
 export type AgentState = typeof AgentStateAnnotation.State;
 
+// Function to check if there are posts to process
+function checkHasPosts(state: AgentState): "has_posts" | "no_posts" {
+  const research = state.research || [];
+  return research.length > 0 ? "has_posts" : "no_posts";
+}
+
 // Create the graph
 const builder = new StateGraph(AgentStateAnnotation);
 
@@ -32,18 +41,25 @@ const builder = new StateGraph(AgentStateAnnotation);
 builder
   .addNode("set_original_message", setOriginalMessageFunction)
   .addNode("truth_social_posts", getLatestTruthSocialPosts)
-  .addNode("extract_query", extractSearchQueryFunction)
-  .addNode("tavily_search", tavilySearchFunction)
-  .addNode("news_api_search", newsApiSearchFunction)
+  .addNode("filter_processed_posts", filterProcessedTruthSocialPosts)
+  // .addNode("extract_query", extractSearchQueryFunction)
+  // .addNode("tavily_search", tavilySearchFunction)
+  // .addNode("news_api_search", newsApiSearchFunction)
+  .addNode("generate_betting_pool_ideas", generateBettingPoolIdeas)
+  .addNode("upsert_truth_social_posts", upsertTruthSocialPosts)
   .addEdge(START, "set_original_message")
   .addEdge("set_original_message", "truth_social_posts")
-  .addEdge("truth_social_posts", "extract_query")
-  .addEdge("extract_query", "tavily_search")
-  .addEdge("extract_query", "news_api_search")
-  .addEdge("extract_query", "truth_social_posts")
-  .addEdge("tavily_search", END)
-  .addEdge("news_api_search", END)
-  .addEdge("truth_social_posts", END);
+  .addEdge("truth_social_posts", "filter_processed_posts")
+  .addConditionalEdges("filter_processed_posts", checkHasPosts, {
+    has_posts: "generate_betting_pool_ideas",
+    no_posts: END,
+  })
+  // .addEdge("extract_query", "tavily_search")
+  // .addEdge("extract_query", "news_api_search")
+  // .addEdge("tavily_search", "generate_betting_pool_ideas")
+  // .addEdge("news_api_search", "generate_betting_pool_ideas")
+  .addEdge("generate_betting_pool_ideas", "upsert_truth_social_posts")
+  .addEdge("upsert_truth_social_posts", END);
 
 // Compile the graph
 export const bettingPoolGeneratorGraph = builder.compile();

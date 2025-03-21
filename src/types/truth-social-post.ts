@@ -1,0 +1,95 @@
+export interface TruthSocialPost {
+  id: string;
+  created_at: string;
+  in_reply_to_id: string | null;
+  quote_id: string | null;
+  in_reply_to_account_id: string | null;
+  sensitive: boolean;
+  spoiler_text: string;
+  visibility: string;
+  language: string;
+  uri: string;
+  url: string;
+  content: string;
+  account: {
+    id: string;
+    username: string;
+    acct: string;
+    display_name: string;
+    locked: boolean;
+    bot: boolean;
+    discoverable: boolean;
+    group: boolean;
+    created_at: string;
+    note: string;
+    url: string;
+    avatar: string;
+    avatar_static: string;
+    header: string;
+    header_static: string;
+    followers_count: number;
+    following_count: number;
+    statuses_count: number;
+    last_status_at: string;
+    verified: boolean;
+    location: string;
+    website: string;
+    unauth_visibility: boolean;
+    chats_onboarded: boolean;
+    feeds_onboarded: boolean;
+    accepting_messages: boolean;
+    show_nonmember_group_statuses: boolean | null;
+    emojis: Array<any>;
+    fields: Array<any>;
+    tv_onboarded: boolean;
+    tv_account: boolean;
+  };
+  media_attachments: Array<{
+    id: string;
+    type: string;
+    url: string;
+    preview_url: string;
+    external_video_id: string | null;
+    remote_url: string | null;
+    preview_remote_url: string | null;
+    text_url: string | null;
+    meta: {
+      original: {
+        width: number;
+        height: number;
+        size: string;
+        aspect: number;
+      };
+      small: {
+        width: number;
+        height: number;
+        size: string;
+        aspect: number;
+      };
+    };
+    description: string | null;
+    blurhash: string;
+    processing: string;
+  }>;
+  mentions: Array<any>;
+  tags: Array<any>;
+  card: {
+    id: string | null;
+    url: string;
+    title: string;
+    description: string;
+    type: string;
+    author_name: string;
+    author_url: string;
+    provider_name: string;
+    provider_url: string;
+    html: string;
+    width: number;
+    height: number;
+    image: string;
+    embed_url: string;
+    blurhash: string;
+    links: any | null;
+    group: any | null;
+  } | null;
+}
