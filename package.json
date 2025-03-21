@@ -6,15 +6,26 @@
   "scripts": {
     "start": "bun run index.ts",
     "test:full": "source .env && bun run test-trump-agent.ts",
-    "test:node": "source .env && bun run test-trump-agent.ts"
+    "test:node": "source .env && bun run test-trump-agent.ts",
+    "codegen": "graphql-codegen"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@eslint/eslintrc": "^3",
+    "@graphql-codegen/cli": "5.0.5",
+    "@graphql-codegen/client-preset": "4.6.3",
+    "@graphql-codegen/introspection": "4.0.3",
+    "@graphql-codegen/typescript-operations": "^4.5.1",
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "@types/bun": "latest",
+    "eslint": "^9",
+    "eslint-config-next": "15.2.3",
+    "prettier": "^3.5.1"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "@graphql-codegen/typescript-graphql-request": "^6.2.0",
     "@langchain/anthropic": "^0.3.15",
     "@langchain/community": "^0.3.36",
     "@langchain/core": "^0.3.42",
@@ -25,6 +36,7 @@
     "@wagmi/chains": "^1.8.0",
     "axios": "^1.8.4",
     "dotenv": "^16.4.7",
+    "graphql": "^16.10.0",
     "http-proxy-agent": "^7.0.2",
     "langchain": "^0.3.19",
     "puppeteer": "^24.4.0",

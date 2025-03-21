@@ -1,5 +1,5 @@
+import { supabase } from "../../config";
 import type { AgentState } from "../betting-pool-graph";
-import { supabase } from "../config";
 
 /**
  * Filters out Truth Social posts that already exist in Supabase with a non-null transaction hash
@@ -26,14 +26,15 @@ export async function filterProcessedTruthSocialPosts(
     console.log(
       `Checking if any of ${postIds.length} posts have been processed already`
     );
-
-    // Query Supabase for posts with non-null transaction_hash
+    // Query Supabase for posts with non-null and non-empty transaction_hash
     const { data: existingPosts, error } = await supabase
       .from("truth_social_posts")
       .select("post_id")
       .in("post_id", postIds)
-      .not("transaction_hash", "is", null);
+      .not("transaction_hash", "is", null)
+      .not("transaction_hash", "eq", "");
 
+    console.log("existingPosts", existingPosts);
     if (error) {
       console.error("Error querying Supabase:", error);
       return {

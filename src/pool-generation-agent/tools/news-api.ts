@@ -1,6 +1,6 @@
 import axios from "axios";
+import config from "../../config";
 import type { AgentState } from "../betting-pool-graph";
-import config from "../config";
 
 interface NewsApiParams {
   q: string; // Search query

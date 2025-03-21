@@ -4,8 +4,32 @@
 
 import { ChatAnthropic } from "@langchain/anthropic";
 import { createClient } from "@supabase/supabase-js";
+import { baseSepolia, type Chain } from "viem/chains";
 import type { Database } from "./types/database.types";
 
+export const DEFAULT_CHAIN_ID = baseSepolia.id;
+
+export type BettingChainConfig = {
+  chain: Chain;
+  subgraphUrl: string;
+  rpcUrl: string;
+  contractAddress: `0x${string}`;
+  privateKey: `0x${string}`;
+};
+
+export type AppConfig = {
+  openaiApiKey: string;
+  anthropicApiKey: string;
+  tavilyApiKey: string;
+  newsApiKey: string;
+  truthSocialApiUrl: string;
+  trumpTruthSocialId: string;
+  small_llm: ChatAnthropic;
+  large_llm: ChatAnthropic;
+  chainConfig: {
+    [chainId: number]: BettingChainConfig;
+  };
+};
 /**
  * Checks if an environment variable is set and returns its value
  * Throws an error if the variable is not set
@@ -44,6 +68,17 @@ export const config = {
   trumpTruthSocialId: process.env.TRUMP_TRUTH_SOCIAL_ID || "107780257626128497",
   small_llm,
   large_llm,
+  chainConfig: {
+    [baseSepolia.id]: {
+      chain: baseSepolia,
+      subgraphUrl: requireEnv("BASE_SEPOLIA_SUBGRAPH_URL"),
+      rpcUrl: requireEnv("BASE_SEPOLIA_RPC_URL"),
+      contractAddress: requireEnv(
+        "BASE_SEPOLIA_BETTING_CONTRACT_ADDRESS"
+      ) as `0x${string}`,
+      privateKey: requireEnv("BASE_SEPOLIA_PRIVATE_KEY") as `0x${string}`,
+    } as BettingChainConfig,
+  },
 };
 
 export const supabase = createClient<Database>(

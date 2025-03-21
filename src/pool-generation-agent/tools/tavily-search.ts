@@ -1,6 +1,6 @@
 import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import config from "../../config";
 import type { AgentState } from "../betting-pool-graph";
-import config from "../config";
 
 // Search function with structured output
 export async function tavilySearchFunction(

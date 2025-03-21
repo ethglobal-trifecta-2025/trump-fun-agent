@@ -1,12 +1,12 @@
 import { BaseMessage } from "@langchain/core/messages";
 import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
+import type { ResearchItem } from "../types/research-item";
 import { createBettingPools } from "./tools/create-betting-pools";
 import { filterProcessedTruthSocialPosts } from "./tools/filter-processed-truth-social-posts";
 import { generateBettingPoolIdeas } from "./tools/generate-betting-pool-ideas";
 import { getLatestTruthSocialPosts } from "./tools/get-latest-truth-social-posts";
 import { setOriginalMessageFunction } from "./tools/set-original-message";
 import { upsertTruthSocialPosts } from "./tools/upsert-truth-social-posts";
-import type { ResearchItem } from "./types/research-item";
 
 const AgentStateAnnotation = Annotation.Root({
   originalMessage: Annotation<string>,
@@ -17,7 +17,20 @@ const AgentStateAnnotation = Annotation.Root({
   newsApiSearchResults: Annotation<object>, //TODO get a better type here
   newsApiSearchFailed: Annotation<boolean>,
   research: Annotation<ResearchItem[]>({
-    reducer: (curr, update) => [...curr, ...update],
+    reducer: (curr, update) => {
+      // Create a map of existing items by some unique identifier (assuming id exists)
+      const existingMap = new Map(
+        curr.map((item) => [item.truthSocialPost.id, item])
+      );
+
+      // Merge update items, replacing existing ones with the same id
+      update.forEach((item) => {
+        existingMap.set(item.truthSocialPost.id, item);
+      });
+
+      // Convert map values back to array
+      return Array.from(existingMap.values());
+    },
     default: () => [],
   }),
   messages: Annotation<BaseMessage[]>({

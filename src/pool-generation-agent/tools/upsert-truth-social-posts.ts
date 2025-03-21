@@ -1,6 +1,6 @@
+import { supabase } from "../../config";
+import type { Database, Json } from "../../types/database.types";
 import type { AgentState } from "../betting-pool-graph";
-import { supabase } from "../config";
-import type { Database, Json } from "../types/database.types";
 /**
  * Upserts Truth Social posts into the database concurrently
  * This stores the post content and metadata for future reference and betting pool creation

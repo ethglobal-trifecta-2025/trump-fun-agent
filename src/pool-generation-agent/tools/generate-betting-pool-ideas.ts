@@ -1,5 +1,5 @@
+import config from "../../config";
 import type { AgentState } from "../betting-pool-graph";
-import config from "../config";
 
 /**
  * Generates Yes/No betting pool questions for each item in the research array in parallel

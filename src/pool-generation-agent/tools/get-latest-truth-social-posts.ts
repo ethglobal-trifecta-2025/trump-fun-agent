@@ -1,8 +1,8 @@
+import config from "../../config";
+import puppeteerStealth from "../../puppeteer-stealth-request";
+import type { ResearchItem } from "../../types/research-item";
+import type { TruthSocialPost } from "../../types/truth-social-post";
 import type { AgentState } from "../betting-pool-graph";
-import config from "../config";
-import puppeteerStealth from "../puppeteer-stealth-request";
-import type { ResearchItem } from "../types/research-item";
-import type { TruthSocialPost } from "../types/truth-social-post";
 
 /**
  * Fetches the latest Truth Social posts for a given account ID

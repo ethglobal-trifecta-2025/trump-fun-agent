@@ -6,7 +6,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
-import contractABI from "../../artifacts/BettingContract.json";
+import contractABI from "../../../artifacts/BettingContract.json";
 import type { AgentState } from "../betting-pool-graph";
 
 /**
