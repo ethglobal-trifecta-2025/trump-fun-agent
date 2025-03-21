@@ -11,4 +11,6 @@ export interface ResearchItem {
   bettingPoolIdea?: string;
   newsSearchQuery?: string;
   tavilySearchQuery?: string;
+  transactionHash?: string; // Blockchain transaction hash from creating the betting pool
+  poolId?: string; // ID of the betting pool on the smart contract
 }

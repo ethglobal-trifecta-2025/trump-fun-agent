@@ -10,11 +10,6 @@ export async function upsertTruthSocialPosts(
 ): Promise<Partial<AgentState>> {
   console.log("Upserting Truth Social posts to database");
 
-  // For now, we're using empty values for poolId and transactionHash
-  // These will be populated in a later implementation
-  const poolId = null;
-  const transactionHash = "";
-
   const researchItems = state.research || [];
 
   if (researchItems.length === 0) {
@@ -33,10 +28,12 @@ export async function upsertTruthSocialPosts(
     const records: Database["public"]["Tables"]["truth_social_posts"]["Insert"][] =
       researchItems.map((item) => ({
         post_id: item.truthSocialPost.id,
-        pool_id: poolId,
+        pool_id: item.poolId || null,
         string_content: JSON.stringify(item.truthSocialPost),
         json_content: JSON.parse(JSON.stringify(item.truthSocialPost)) as Json, //TODO: This chain offends me
-        transaction_hash: transactionHash,
+        transaction_hash: item.transactionHash || "",
+        betting_pool_idea: item.bettingPoolIdea || "",
+        created_at: new Date().toISOString(),
       }));
 
     // Split records into batches for concurrent processing

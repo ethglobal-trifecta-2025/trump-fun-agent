@@ -1,5 +1,6 @@
 import { BaseMessage } from "@langchain/core/messages";
 import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
+import { createBettingPools } from "./tools/create-betting-pools";
 import { filterProcessedTruthSocialPosts } from "./tools/filter-processed-truth-social-posts";
 import { generateBettingPoolIdeas } from "./tools/generate-betting-pool-ideas";
 import { getLatestTruthSocialPosts } from "./tools/get-latest-truth-social-posts";
@@ -42,10 +43,8 @@ builder
   .addNode("set_original_message", setOriginalMessageFunction)
   .addNode("truth_social_posts", getLatestTruthSocialPosts)
   .addNode("filter_processed_posts", filterProcessedTruthSocialPosts)
-  // .addNode("extract_query", extractSearchQueryFunction)
-  // .addNode("tavily_search", tavilySearchFunction)
-  // .addNode("news_api_search", newsApiSearchFunction)
   .addNode("generate_betting_pool_ideas", generateBettingPoolIdeas)
+  .addNode("create_betting_pools", createBettingPools)
   .addNode("upsert_truth_social_posts", upsertTruthSocialPosts)
   .addEdge(START, "set_original_message")
   .addEdge("set_original_message", "truth_social_posts")
@@ -54,11 +53,8 @@ builder
     has_posts: "generate_betting_pool_ideas",
     no_posts: END,
   })
-  // .addEdge("extract_query", "tavily_search")
-  // .addEdge("extract_query", "news_api_search")
-  // .addEdge("tavily_search", "generate_betting_pool_ideas")
-  // .addEdge("news_api_search", "generate_betting_pool_ideas")
-  .addEdge("generate_betting_pool_ideas", "upsert_truth_social_posts")
+  .addEdge("generate_betting_pool_ideas", "create_betting_pools")
+  .addEdge("create_betting_pools", "upsert_truth_social_posts")
   .addEdge("upsert_truth_social_posts", END);
 
 // Compile the graph
