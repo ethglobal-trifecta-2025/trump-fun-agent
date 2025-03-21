@@ -1,0 +1,35 @@
+{
+  "name": "trump-fun-agent",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run index.ts",
+    "test:full": "source .env && bun run test-trump-agent.ts",
+    "test:node": "source .env && bun run test-trump-agent.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "supabase": "^2.19.7"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@langchain/anthropic": "^0.3.15",
+    "@langchain/community": "^0.3.36",
+    "@langchain/core": "^0.3.42",
+    "@langchain/langgraph": "^0.2.57",
+    "@langchain/openai": "^0.4.5",
+    "@tavily/core": "^0.3.2",
+    "axios": "^1.8.4",
+    "dotenv": "^16.4.7",
+    "http-proxy-agent": "^7.0.2",
+    "langchain": "^0.3.19",
+    "puppeteer": "^24.4.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "socks-proxy-agent": "^8.0.5",
+    "undici": "^7.5.0"
+  }
+}

@@ -1,0 +1,94 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Frontend development guidelines for Trump.fun prediction market platform
+globs: *.tsx, *.jsx, *.ts, *.js
+---
+# Trump.fun Development Guidelines
+
+You are developing components for Trump.fun, a prediction market platform for bets on Trump's social media posts and public actions. The platform needs to be user-friendly, web3-friendly (but with web2 UX), and feature Trump's distinctive communication style.
+
+## Project Overview
+- A platform where users bet on what Trump might say or do next
+- Uses embedded wallets (Privy) for simple user onboarding
+- Displays prediction markets in first-person Trump style
+- Stores bets and market data on-chain, comments in Supabase
+
+## Tech Stack
+- NextJS with App Router
+- React 19
+- TailwindCSS 
+- shadcn/ui components
+- Privy for authentication and wallets
+- Base network for blockchain transactions
+- The Graph for data fetching
+
+## Component Guidelines
+- Use arrow function components with proper TypeScript types
+- Always check authentication state before showing protected content
+- Display proper loading states for async operations
+- Use orange (#ff6d00) as the primary brand color
+- Implement responsive design for all components
+- Write Trump-style prediction titles in ALL CAPS for emphasis
+
+## Authentication & Wallet
+- Use Privy for user authentication and wallet management
+- Configure embedded wallets as default for new users
+- Set Base as the default blockchain network
+- Handle transaction signing properly
+- Verify wallet connection before allowing bet placement
+
+## Coding Standards
+- Keep components small and focused
+- Use custom hooks for reusable logic
+- Prefer React Server Components when possible
+- Add 'use client' directive only when needed
+- Follow mobile-first responsive design
+- Use proper TypeScript types for all data
+
+## Betting Pools Display
+- Show prediction in Trump's distinctive style
+- Display yes/no percentages with visual indicator
+- Show time remaining until resolution
+- Include total bet volume
+- Add link to original social media post when available
+
+## UI Elements
+- Use shadcn/ui components as foundation
+- Custom style with Trump-themed orange primary color
+- Create intuitive forms for placing bets
+- Implement proper validation for bet amounts
+- Show transaction status and confirmations
+
+## Examples
+
+### Trump-style prediction:
+"Will I WIN the case against the CORRUPT NY Attorney General next month? The case is RIGGED but the PEOPLE know the TRUTH!"
+
+### Component structure:
+```tsx
+'use client'
+
+import { useState } from 'react'
+import { usePrivy } from '@privy-io/react-auth'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+
+const BetCard = ({ prediction, endTime, yesPercentage, noPercentage }) => {
+  const { ready, authenticated, login } = usePrivy()
+  
+  if (!ready) {
+    return <div className="animate-pulse">Loading prediction...</div>
+  }
+  
+  return (
+    <Card className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+      <h3 className="text-xl font-bold mb-2">{prediction}</h3>
+      {/* Rest of component */}
+    </Card>
+  )
+}
+```
