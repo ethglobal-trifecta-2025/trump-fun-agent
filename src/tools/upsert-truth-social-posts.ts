@@ -32,7 +32,6 @@ export async function upsertTruthSocialPosts(
         string_content: JSON.stringify(item.truthSocialPost),
         json_content: JSON.parse(JSON.stringify(item.truthSocialPost)) as Json, //TODO: This chain offends me
         transaction_hash: item.transactionHash || "",
-        betting_pool_idea: item.bettingPoolIdea || "",
         created_at: new Date().toISOString(),
       }));
 

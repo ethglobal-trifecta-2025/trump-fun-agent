@@ -84,8 +84,9 @@ export async function createBettingPools(
         betsCloseAt: betsCloseAt,
         closureCriteria: "",
         closureInstructions: "",
-        originalTruthSocialPostId: item.truthSocialPost.id,
+        originalTruthSocialPostId: item.truthSocialPost?.id?.toString() || "",
       };
+      console.log("createPoolParams", createPoolParams);
 
       try {
         // Send the transaction
@@ -94,8 +95,6 @@ export async function createBettingPools(
           abi: contractABI.abi,
           functionName: "createPool",
           args: [createPoolParams],
-          maxFeePerGas: BigInt(3000000000), // 3 Gwei
-          maxPriorityFeePerGas: BigInt(1500000000), // 1.5 Gwei
         });
 
         console.log(`Transaction sent for item ${index + 1}, hash: ${hash}`);

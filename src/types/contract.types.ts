@@ -30,7 +30,6 @@ export const bettingContractAbi = [
       { name: 'poolId', internalType: 'uint256', type: 'uint256' },
       { name: 'createdAt', internalType: 'uint256', type: 'uint256' },
       { name: 'updatedAt', internalType: 'uint256', type: 'uint256' },
-      { name: 'isPayedOut', internalType: 'bool', type: 'bool' },
       { name: 'isWithdrawn', internalType: 'bool', type: 'bool' },
       {
         name: 'tokenType',
@@ -183,13 +182,13 @@ export const bettingContractAbi = [
     inputs: [
       { name: 'user', internalType: 'address', type: 'address' },
       {
-        name: '',
+        name: 'tokenType',
         internalType: 'enum BettingContract.TokenType',
         type: 'uint8',
       },
     ],
     name: 'userBalances',
-    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    outputs: [{ name: 'balance', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'view',
   },
   {
@@ -204,8 +203,28 @@ export const bettingContractAbi = [
   },
   {
     type: 'function',
-    inputs: [{ name: 'betId', internalType: 'uint256', type: 'uint256' }],
+    inputs: [
+      {
+        name: 'tokenType',
+        internalType: 'enum BettingContract.TokenType',
+        type: 'uint8',
+      },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
     name: 'withdraw',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      {
+        name: 'tokenType',
+        internalType: 'enum BettingContract.TokenType',
+        type: 'uint8',
+      },
+    ],
+    name: 'withdrawAll',
     outputs: [],
     stateMutability: 'nonpayable',
   },
@@ -398,19 +417,113 @@ export const bettingContractAbi = [
     ],
     name: 'Withdrawal',
   },
-  { type: 'error', inputs: [], name: 'BetAlreadyExists' },
-  { type: 'error', inputs: [], name: 'BetAlreadyPaidOut' },
-  { type: 'error', inputs: [], name: 'BetAlreadyWithdrawn' },
-  { type: 'error', inputs: [], name: 'BetNotPaidOut' },
-  { type: 'error', inputs: [], name: 'BetsCloseTimeInPast' },
-  { type: 'error', inputs: [], name: 'BettingPeriodClosed' },
-  { type: 'error', inputs: [], name: 'BettingPeriodNotClosed' },
-  { type: 'error', inputs: [], name: 'GradingError' },
-  { type: 'error', inputs: [], name: 'InsufficientBalance' },
-  { type: 'error', inputs: [], name: 'InsufficientWithdrawBalance' },
-  { type: 'error', inputs: [], name: 'InvalidOptionIndex' },
-  { type: 'error', inputs: [], name: 'NoBetToCancel' },
-  { type: 'error', inputs: [], name: 'NotBetOwner' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'betId', internalType: 'uint256', type: 'uint256' },
+      { name: 'bettor', internalType: 'address', type: 'address' },
+      { name: 'poolId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'BetAlreadyExists',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'betId', internalType: 'uint256', type: 'uint256' }],
+    name: 'BetAlreadyPaidOut',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'betId', internalType: 'uint256', type: 'uint256' }],
+    name: 'BetAlreadyWithdrawn',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'betId', internalType: 'uint256', type: 'uint256' }],
+    name: 'BetNotPaidOut',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'providedTime', internalType: 'uint40', type: 'uint40' },
+      { name: 'currentTime', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'BetsCloseTimeInPast',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'poolId', internalType: 'uint256', type: 'uint256' },
+      { name: 'closedAt', internalType: 'uint40', type: 'uint40' },
+      { name: 'currentTime', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'BettingPeriodClosed',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'poolId', internalType: 'uint256', type: 'uint256' },
+      { name: 'closesAt', internalType: 'uint40', type: 'uint40' },
+      { name: 'currentTime', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'BettingPeriodNotClosed',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'poolId', internalType: 'uint256', type: 'uint256' },
+      { name: 'invalidOption', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'GradingError',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      { name: 'required', internalType: 'uint256', type: 'uint256' },
+      { name: 'actual', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InsufficientBalance',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'user', internalType: 'address', type: 'address' },
+      {
+        name: 'tokenType',
+        internalType: 'enum BettingContract.TokenType',
+        type: 'uint8',
+      },
+      { name: 'requested', internalType: 'uint256', type: 'uint256' },
+      { name: 'available', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InsufficientWithdrawBalance',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'providedIndex', internalType: 'uint256', type: 'uint256' },
+      { name: 'maxIndex', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'InvalidOptionIndex',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'poolId', internalType: 'uint256', type: 'uint256' },
+      { name: 'bettor', internalType: 'address', type: 'address' },
+      { name: 'optionIndex', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'NoBetToCancel',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'betId', internalType: 'uint256', type: 'uint256' },
+      { name: 'caller', internalType: 'address', type: 'address' },
+      { name: 'owner', internalType: 'address', type: 'address' },
+    ],
+    name: 'NotBetOwner',
+  },
   {
     type: 'error',
     inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
@@ -421,13 +534,83 @@ export const bettingContractAbi = [
     inputs: [{ name: 'account', internalType: 'address', type: 'address' }],
     name: 'OwnableUnauthorizedAccount',
   },
-  { type: 'error', inputs: [], name: 'PoolAlreadyClosed' },
-  { type: 'error', inputs: [], name: 'PoolDoesntExist' },
-  { type: 'error', inputs: [], name: 'PoolNotGraded' },
-  { type: 'error', inputs: [], name: 'PoolNotOpen' },
-  { type: 'error', inputs: [], name: 'TokenRefundFailed' },
-  { type: 'error', inputs: [], name: 'TokenTransferFailed' },
-  { type: 'error', inputs: [], name: 'TokenTypeMismatch' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'poolId', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'currentStatus',
+        internalType: 'enum BettingContract.PoolStatus',
+        type: 'uint8',
+      },
+    ],
+    name: 'PoolAlreadyClosed',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'poolId', internalType: 'uint256', type: 'uint256' }],
+    name: 'PoolDoesntExist',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'poolId', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'currentStatus',
+        internalType: 'enum BettingContract.PoolStatus',
+        type: 'uint8',
+      },
+    ],
+    name: 'PoolNotGraded',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'poolId', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'currentStatus',
+        internalType: 'enum BettingContract.PoolStatus',
+        type: 'uint8',
+      },
+    ],
+    name: 'PoolNotOpen',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'token', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'TokenRefundFailed',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'token', internalType: 'address', type: 'address' },
+      { name: 'from', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'amount', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'TokenTransferFailed',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'betId', internalType: 'uint256', type: 'uint256' },
+      {
+        name: 'expected',
+        internalType: 'enum BettingContract.TokenType',
+        type: 'uint8',
+      },
+      {
+        name: 'provided',
+        internalType: 'enum BettingContract.TokenType',
+        type: 'uint8',
+      },
+    ],
+    name: 'TokenTypeMismatch',
+  },
   { type: 'error', inputs: [], name: 'ZeroAmount' },
 ] as const
 
