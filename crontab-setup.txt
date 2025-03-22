@@ -1,0 +1,2 @@
+/5 * * * * bash /root/trump-fun-agent/run-pool-creation.sh >> /root/trump-fun-agent/run-pool-creation-agent.log 2>&1
+*/15 * * * * bash /root/trump-fun-agent/run-grading.sh >> /root/trump-fun-agent/run-bet-grading-agent.log 2>&1

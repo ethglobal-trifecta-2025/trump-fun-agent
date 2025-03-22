@@ -1,4 +1,5 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { z } from "zod";
 import { config } from "../../config";
 import type { GraderState, PendingPool } from "../betting-grader-graph";
 
@@ -14,6 +15,22 @@ export interface BettingPoolIdeaGraderOutput {
     official_results_available: boolean;
   };
 }
+
+// Define Zod schema for the expected output
+const bettingPoolIdeaGraderSchema = z.object({
+  result: z.string(),
+  result_code: z.number().optional(),
+  probabilities: z.record(z.string(), z.number()).optional(),
+  sources: z.array(z.string()),
+  explanation: z.string(),
+  time_period_analysis: z
+    .object({
+      period_mentioned: z.string().optional(),
+      period_has_passed: z.boolean(),
+      official_results_available: z.boolean(),
+    })
+    .optional(),
+});
 
 const gradingSysMsg = new SystemMessage(
   `You are a betting pool idea grader with expertise in data analysis and probability assessment.
@@ -50,24 +67,7 @@ const gradingSysMsg = new SystemMessage(
         - Prioritize official company reports/announcements
         - Consider reliable third-party verification
         - Require multiple sources for confirmation
-        - Check source dates to ensure they cover the correct time period
-        
-        Your response must be ONLY a JSON object with these fields:
-        {
-            "result": "", // "not resolved yet", "option A", "option B", or "push"
-            "probabilities": {
-                // Probabilities for each option
-            },
-            "sources": [
-                // URLs of sources used
-            ],
-            "explanation": "", // Include the time period analysis in your explanation
-            "time_period_analysis": { 
-                "period_mentioned": "", // e.g., "Q1 2025"
-                "period_has_passed": true/false,
-                "official_results_available": true/false
-            }
-        }`
+        - Check source dates to ensure they cover the correct time period`
 );
 /**
  * Grades all non-failed betting pools concurrently based on evidence
@@ -123,31 +123,31 @@ export async function gradeBettingPoolIdea(
       );
 
       try {
-        const resultJson = await config.large_llm.invoke([
+        // Create the structured LLM
+        const structuredLlm = config.large_llm.withStructuredOutput(
+          bettingPoolIdeaGraderSchema,
+          {
+            name: "gradeBettingPoolIdea",
+          }
+        );
+
+        // Call the LLM with the prompt
+        const result = await structuredLlm.invoke([
           gradingSysMsg,
           gradingUserMsg,
         ]);
 
-        // Parse the result
-        let result: BettingPoolIdeaGraderOutput;
-        if (typeof resultJson.content === "string") {
-          result = JSON.parse(resultJson.content);
-        } else {
-          result = resultJson.content as any;
-        }
-
         console.log("result.result", result.result);
         // Determine the result code based on the grading output
+        let result_code = 4; // Default to ERROR
         if (result.result === "not resolved yet") {
-          result.result_code = 0; // NOT READY TO GRADE
+          result_code = 0; // NOT READY TO GRADE
         } else if (result.result === "option A") {
-          result.result_code = 1; // Option A
+          result_code = 1; // Option A
         } else if (result.result === "option B") {
-          result.result_code = 2; // Option B
+          result_code = 2; // Option B
         } else if (result.result === "push") {
-          result.result_code = 3; // DRAW
-        } else {
-          result.result_code = 4; // ERROR
+          result_code = 3; // DRAW
         }
 
         console.log(`Grading result for pool ${poolId}:`, result);
@@ -159,7 +159,7 @@ export async function gradeBettingPoolIdea(
             ...pendingPool,
             gradingResult: {
               result: result.result,
-              result_code: result.result_code,
+              result_code: result_code,
               probabilities: result.probabilities || {},
               sources: result.sources || [],
               explanation: result.explanation || "",
