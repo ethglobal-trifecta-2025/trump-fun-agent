@@ -6,6 +6,7 @@ import type { ResearchItem } from "../types/research-item";
 import { createBettingPools } from "./tools/create-betting-pools";
 import { filterProcessedTruthSocialPosts } from "./tools/filter-processed-truth-social-posts";
 import { generateBettingPoolIdeas } from "./tools/generate-betting-pool-ideas";
+import { generateImages } from "./tools/generate-images";
 import { getLatestTruthSocialPosts } from "./tools/get-latest-truth-social-posts";
 import { setOriginalMessageFunction } from "./tools/set-original-message";
 import { upsertTruthSocialPosts } from "./tools/upsert-truth-social-posts";
@@ -67,6 +68,7 @@ builder
   .addNode("truth_social_posts", getLatestTruthSocialPosts)
   .addNode("filter_processed_posts", filterProcessedTruthSocialPosts)
   .addNode("generate_betting_pool_ideas", generateBettingPoolIdeas)
+  .addNode("generate_images", generateImages)
   .addNode("create_betting_pools", createBettingPools)
   .addNode("upsert_truth_social_posts", upsertTruthSocialPosts)
   .addEdge(START, "set_original_message")
@@ -76,7 +78,8 @@ builder
     has_posts: "generate_betting_pool_ideas",
     no_posts: END,
   })
-  .addEdge("generate_betting_pool_ideas", "create_betting_pools")
+  .addEdge("generate_betting_pool_ideas", "generate_images")
+  .addEdge("generate_images", "create_betting_pools")
   .addEdge("create_betting_pools", "upsert_truth_social_posts")
   .addEdge("upsert_truth_social_posts", END);
 

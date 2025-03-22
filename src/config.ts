@@ -27,6 +27,9 @@ export type AppConfig = {
   trumpTruthSocialId: string;
   small_llm: ChatAnthropic;
   large_llm: ChatAnthropic;
+  fluxApiKey: string;
+  maxImagesPerRun: number;
+  fluxModel: string;
   chainConfig: {
     [chainId: number]: BettingChainConfig;
   };
@@ -69,6 +72,9 @@ export const config = {
   trumpTruthSocialId: process.env.TRUMP_TRUTH_SOCIAL_ID || "107780257626128497",
   small_llm,
   large_llm,
+  fluxApiKey: requireEnv("BFL_API_KEY"),
+  maxImagesPerRun: Number(process.env.MAX_IMAGES_PER_RUN || "999"),
+  fluxModel: process.env.FLUX_MODEL || "flux-dev",
   chainConfig: {
     [baseSepolia.id]: {
       chain: baseSepolia,

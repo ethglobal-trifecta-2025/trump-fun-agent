@@ -41,6 +41,8 @@ export async function upsertTruthSocialPosts(
         json_content: JSON.parse(JSON.stringify(item.truthSocialPost)) as Json, //TODO: This chain offends me
         transaction_hash: item.transactionHash || "",
         created_at: new Date().toISOString(),
+        image_url: item.imageUrl || null,
+        prompt_data: JSON.parse(JSON.stringify(item)) as Json,
       }));
 
     // If no items to process, return early

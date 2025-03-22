@@ -15,4 +15,6 @@ export interface ResearchItem {
   poolId?: string; // ID of the betting pool on the smart contract
   shouldProcess?: boolean; // Flag to indicate if this item should be processed further
   skipReason?: string; // Reason why the item was marked for skipping (e.g., "already_processed", "too_old")
+  imagePrompt?: string; // Generated prompt for image creation
+  imageUrl?: string; // URL of the generated image
 }

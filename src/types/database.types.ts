@@ -83,32 +83,70 @@ export type Database = {
       comments: {
         Row: {
           body: string
+          commentID: number | null
           created_at: string
           id: number
           pool_id: string
           signature: string
           updated_at: string | null
+          upvotes: number | null
           user_address: string
         }
         Insert: {
           body: string
+          commentID?: number | null
           created_at?: string
           id?: number
           pool_id: string
           signature: string
           updated_at?: string | null
+          upvotes?: number | null
           user_address: string
         }
         Update: {
           body?: string
+          commentID?: number | null
           created_at?: string
           id?: number
           pool_id?: string
           signature?: string
           updated_at?: string | null
+          upvotes?: number | null
           user_address?: string
         }
         Relationships: []
+      }
+      facts: {
+        Row: {
+          comment_id: number | null
+          created_at: string
+          id: number
+          pool_id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id?: number | null
+          created_at?: string
+          id?: number
+          pool_id: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: number | null
+          created_at?: string
+          id?: number
+          pool_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facts_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       room_agents: {
         Row: {
@@ -495,27 +533,33 @@ export type Database = {
         Row: {
           chain_id: number
           created_at: string
+          image_url: string | null
           json_content: Json | null
           pool_id: string | null
           post_id: string
+          prompt_data: Json | null
           string_content: string | null
           transaction_hash: string | null
         }
         Insert: {
           chain_id?: number
           created_at?: string
+          image_url?: string | null
           json_content?: Json | null
           pool_id?: string | null
           post_id: string
+          prompt_data?: Json | null
           string_content?: string | null
           transaction_hash?: string | null
         }
         Update: {
           chain_id?: number
           created_at?: string
+          image_url?: string | null
           json_content?: Json | null
           pool_id?: string | null
           post_id?: string
+          prompt_data?: Json | null
           string_content?: string | null
           transaction_hash?: string | null
         }
@@ -566,6 +610,27 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: number
+        }
+        Relationships: []
+      }
+      wallets: {
+        Row: {
+          created_at: string
+          id: number
+          tg_id: number | null
+          wallet_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          tg_id?: number | null
+          wallet_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          tg_id?: number | null
+          wallet_id?: string | null
         }
         Relationships: []
       }
