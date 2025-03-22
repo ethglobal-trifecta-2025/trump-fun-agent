@@ -61,6 +61,16 @@ const large_llm = new ChatAnthropic({
   anthropicApiKey: anthropicApiKey,
 });
 
+const fluxModel = process.env.FLUX_MODEL || "flux-dev";
+if (
+  fluxModel !== "flux-dev" &&
+  fluxModel !== "flux-pro-1.1" &&
+  fluxModel !== "flux-pro" &&
+  fluxModel !== "lux-pro-1.1-ultra"
+) {
+  throw new Error(`Invalid FLUX_MODEL: ${fluxModel}`);
+}
+
 // Export config object for convenience
 export const config = {
   openaiApiKey,
@@ -74,7 +84,7 @@ export const config = {
   large_llm,
   fluxApiKey: requireEnv("BFL_API_KEY"),
   maxImagesPerRun: Number(process.env.MAX_IMAGES_PER_RUN || "3"),
-  fluxModel: process.env.FLUX_MODEL || "flux-dev",
+  fluxModel,
   chainConfig: {
     [baseSepolia.id]: {
       chain: baseSepolia,
