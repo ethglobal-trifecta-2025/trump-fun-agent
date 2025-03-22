@@ -5,7 +5,6 @@ import { config, DEFAULT_CHAIN_ID } from "./src/config";
 
 async function testBettingGrader() {
   console.log("Starting betting grader test");
-  console.log("Chain Config:", config.chainConfig[DEFAULT_CHAIN_ID]);
 
   // Initial state for the grader graph
   const result = await bettingGraderGraph.invoke({

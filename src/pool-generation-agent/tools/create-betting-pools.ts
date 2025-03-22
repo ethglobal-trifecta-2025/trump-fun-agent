@@ -5,7 +5,6 @@ import {
   parseEventLogs,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { baseSepolia } from "viem/chains";
 import contractABI from "../../../artifacts/BettingContract.json";
 import type { AgentState } from "../betting-pool-graph";
 
@@ -27,35 +26,46 @@ export async function createBettingPools(
     };
   }
 
-  // Environment variables
-  const privateKey = process.env.PRIVATE_KEY;
-  const rpcUrl = process.env.RPC_URL;
-  const contractAddress = process.env.BETTING_CONTRACT_ADDRESS;
-
-  if (!privateKey || !rpcUrl || !contractAddress) {
-    console.error(
-      "Missing required environment variables for contract interaction"
-    );
+  // Get chain configuration from state
+  const chainConfig = state.chainConfig;
+  if (!chainConfig) {
+    console.error("Missing chain configuration in state");
     return {
       research: researchItems,
     };
   }
 
   // Set up viem clients
-  const account = privateKeyToAccount(privateKey as `0x${string}`);
+  const account = privateKeyToAccount(chainConfig.privateKey);
 
   const publicClient = createPublicClient({
-    chain: baseSepolia, //TODO Don't hardcode
-    transport: http(rpcUrl), //TODO Don't hardcode
+    chain: chainConfig.chain,
+    transport: http(chainConfig.rpcUrl),
   });
 
   const walletClient = createWalletClient({
     account,
-    chain: baseSepolia, //TODO Don't hardcode
-    transport: http(rpcUrl), //TODO Don't hardcode
+    chain: chainConfig.chain,
+    transport: http(chainConfig.rpcUrl),
   });
 
   try {
+    // Filter research items to only process those marked with shouldProcess: true
+    const itemsToProcess = researchItems.filter(
+      (item) => item.shouldProcess === true && item.bettingPoolIdea
+    );
+
+    console.log(
+      `Processing ${itemsToProcess.length} out of ${researchItems.length} total research items for betting pool creation`
+    );
+
+    if (itemsToProcess.length === 0) {
+      console.log("No items to process after filtering");
+      return {
+        research: researchItems,
+      };
+    }
+
     // Create a function to process each research item and create a betting pool
     const processResearchItem = async (item: any, index: number) => {
       // Add a random delay to prevent rate limiting (100-300ms)
@@ -64,7 +74,7 @@ export async function createBettingPools(
 
       console.log(
         `Creating betting pool for research item ${index + 1}/${
-          researchItems.length
+          itemsToProcess.length
         }`
       );
 
@@ -77,13 +87,21 @@ export async function createBettingPools(
 
       // Set up the parameters for the betting pool
       const betsCloseAt = Math.floor(Date.now() / 1000) + 24 * 60 * 60; // 24 hours from now
+      // Calculate and format the expected resolution date for human readability
+      const resolutionDate = new Date(betsCloseAt * 1000);
+      const formattedResolutionDate = resolutionDate.toLocaleString();
+
+      // Standard closure criteria and instructions for 7-day window
+      const closureCriteria =
+        "This pool will be resolved within 7 days based on verifiable public information.";
+      const closureInstructions = `This prediction resolves by ${formattedResolutionDate}. Grade as YES if the predicted event occurs by the resolution date, and NO otherwise. Use verifiable public sources to determine the outcome.`;
 
       const createPoolParams = {
         question: item.bettingPoolIdea,
         options: ["Yes", "No"] as [string, string],
         betsCloseAt: betsCloseAt,
-        closureCriteria: "",
-        closureInstructions: "",
+        closureCriteria: closureCriteria,
+        closureInstructions: closureInstructions,
         originalTruthSocialPostId: item.truthSocialPost?.id?.toString() || "",
       };
       console.log("createPoolParams", createPoolParams);
@@ -91,7 +109,7 @@ export async function createBettingPools(
       try {
         // Send the transaction
         const hash = await walletClient.writeContract({
-          address: contractAddress as `0x${string}`,
+          address: chainConfig.contractAddress,
           abi: contractABI.abi,
           functionName: "createPool",
           args: [createPoolParams],
@@ -144,23 +162,35 @@ export async function createBettingPools(
     };
 
     // Process all research items sequentially with a 100-300ms delay between calls
-    const updatedResearch = [];
-    for (let i = 0; i < researchItems.length; i++) {
-      const updatedResearchItem = await processResearchItem(
-        researchItems[i],
-        i
+    const updatedResearch = [...researchItems]; // Start with a copy of all items to preserve ones we skip
+
+    // Process only the items that have shouldProcess: true
+    for (let i = 0; i < itemsToProcess.length; i++) {
+      const currentItem = itemsToProcess[i];
+
+      // Skip if item is undefined (shouldn't happen, but TypeScript needs this check)
+      if (!currentItem) continue;
+
+      const itemIndex = researchItems.findIndex(
+        (item) => item.truthSocialPost.id === currentItem.truthSocialPost.id
       );
-      updatedResearch.push(updatedResearchItem);
+
+      if (itemIndex === -1) continue; // Shouldn't happen, but just in case
+
+      const updatedResearchItem = await processResearchItem(currentItem, i);
+
+      // Update the specific item in our copy of the array
+      updatedResearch[itemIndex] = updatedResearchItem;
 
       // Add delay between transactions (100-300ms)
-      if (i < researchItems.length - 1) {
+      if (i < itemsToProcess.length - 1) {
         const delay = Math.floor(Math.random() * 200) + 100; // 100-300ms
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 
     console.log(
-      `Created betting pools for ${updatedResearch.length} research items`
+      `Created betting pools for ${itemsToProcess.length} research items`
     );
 
     return {

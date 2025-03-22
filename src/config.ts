@@ -12,6 +12,7 @@ export const DEFAULT_CHAIN_ID = baseSepolia.id;
 export type BettingChainConfig = {
   chain: Chain;
   subgraphUrl: string;
+  subgraphApiKey: string;
   rpcUrl: string;
   contractAddress: `0x${string}`;
   privateKey: `0x${string}`;
@@ -72,6 +73,7 @@ export const config = {
     [baseSepolia.id]: {
       chain: baseSepolia,
       subgraphUrl: requireEnv("BASE_SEPOLIA_SUBGRAPH_URL"),
+      subgraphApiKey: requireEnv("BASE_SEPOLIA_SUBGRAPH_API_KEY"),
       rpcUrl: requireEnv("BASE_SEPOLIA_RPC_URL"),
       contractAddress: requireEnv(
         "BASE_SEPOLIA_BETTING_CONTRACT_ADDRESS"

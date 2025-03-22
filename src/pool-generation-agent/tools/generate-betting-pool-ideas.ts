@@ -22,8 +22,24 @@ export async function generateBettingPoolIdeas(
   try {
     const llm = config.large_llm;
 
+    // Filter research items to only process those marked with shouldProcess: true
+    const itemsToProcess = researchItems.filter(
+      (item) => item.shouldProcess === true
+    );
+
+    console.log(
+      `Processing ${itemsToProcess.length} out of ${researchItems.length} total research items`
+    );
+
+    if (itemsToProcess.length === 0) {
+      console.log("No items to process after filtering");
+      return {
+        research: researchItems,
+      };
+    }
+
     // Process each research item in parallel
-    const updatedResearchPromises = researchItems.map(async (item) => {
+    const updatedResearchPromises = itemsToProcess.map(async (item) => {
       console.log(
         `Generating betting idea for post: ${item.truthSocialPost.id}`
       );
@@ -36,6 +52,19 @@ export async function generateBettingPoolIdeas(
 
       console.log(`Post content: ${postContent.substring(0, 100)}...`);
 
+      // Get timestamps for post creation and current time
+      const postCreatedAt = new Date(item.truthSocialPost.created_at);
+      const currentTime = new Date();
+
+      // Format dates for the prompt
+      const postDateFormatted = postCreatedAt.toLocaleString();
+      const currentDateFormatted = currentTime.toLocaleString();
+
+      // Calculate the date 7 days from now for grading window
+      const sevenDaysFromNow = new Date(currentTime);
+      sevenDaysFromNow.setDate(currentTime.getDate() + 7);
+      const sevenDaysFormatted = sevenDaysFromNow.toLocaleString();
+
       // Include any existing research data in the prompt
       const newsInfo = item.relatedNews
         ? `Related news: ${item.relatedNews.join(", ")}`
@@ -47,9 +76,11 @@ export async function generateBettingPoolIdeas(
       const prompt = `
 You are creating a Yes/No betting question based on a Truth Social post by Donald Trump.
 The question should be written in Trump's distinctive style, using ALL CAPS for emphasis and his characteristic tone.
-The question must be a clear Yes/No prediction about something that could happen in the future related to the post.
+The question must be a clear Yes/No prediction about something that could happen in the FUTURE related to the post.
 
 Truth Social post: "${postContent}"
+Post date: ${postDateFormatted}
+Current date and time: ${currentDateFormatted}
 
 Research information:
 <related_news>
@@ -59,13 +90,20 @@ ${newsInfo}
 ${searchInfo}
 </related_web_search_results>
 
+IMPORTANT TIMING INSTRUCTIONS:
+1. You must ONLY create betting pools for FUTURE events that have not been decided yet
+2. Focus on events that will likely be resolved within the next 7 days (by ${sevenDaysFormatted})
+3. Avoid creating pools about past events that already happened before ${currentDateFormatted}
+4. The resolution criteria must be clear and objectively verifiable
+
 Create a Yes/No question in Trump's style that users can bet on. The question should:
 1. Be related to the content of the post
 2. Be written in FIRST PERSON as if Trump is asking it
 3. Use ALL CAPS for emphasis
 4. Include Trump's distinctive phrasing and tone
 5. Be clear what a YES or NO outcome would mean
-6. Focus on something that will be verifiable in the future
+6. Focus on something that will be verifiable within the next 7 days
+7. Be something that CAN be objectively verified (avoid subjective judgments)
 
 Format your answer as a single Yes/No question with no additional text.
 `;

@@ -1,13 +1,17 @@
 import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { tavily } from "@tavily/core";
+import { z } from "zod";
 import { config } from "../../config";
 import type { GraderState, PendingPool } from "../betting-grader-graph";
-
-
 /**
  * Gathers evidence from search queries for all non-failed pools concurrently
  */
 
+// TODO Tool is giving me trouble, using the client directly for now.
+const tavilyClient = tavily({
+  apiKey: config.tavilyApiKey,
+});
 export interface Evidence {
   url: string;
   summary: string;
@@ -26,6 +30,13 @@ export async function gatherEvidence(
     return { pendingPools: {} };
   }
 
+  // Define the expected output schema
+  const evidenceSchema = z.object({
+    url: z.string(),
+    summary: z.string(),
+    search_query: z.string(),
+  });
+
   // Set up Tavily search
   const tavilySearch = new TavilySearchResults({
     apiKey: config.tavilyApiKey,
@@ -33,114 +44,117 @@ export async function gatherEvidence(
     includeRawContent: true,
   });
 
-  // Process each non-failed pool concurrently
-  const pendingPoolsPromises = Object.entries(state.pendingPools).map(
-    async ([poolId, pendingPool]) => {
-      // Skip pools that have failed or don't have search queries
-      if (
-        pendingPool.failed ||
-        pendingPool.evidenceSearchQueries.length === 0
-      ) {
-        console.log(`Skipping pool ${poolId} - failed or no search queries`);
-        return [
-          poolId,
-          {
-            ...pendingPool,
-            failed:
-              pendingPool.failed ||
-              pendingPool.evidenceSearchQueries.length === 0,
-          },
-        ] as [string, PendingPool];
-      }
+  const updatedPendingPools: Record<string, PendingPool> = {};
+  for (const [poolId, pendingPool] of Object.entries(state.pendingPools)) {
+    // Process one pool at a time
+    // Skip pools that have failed or don't have search queries
+    if (pendingPool.failed || pendingPool.evidenceSearchQueries.length === 0) {
+      console.log(`Skipping pool ${poolId} - failed or no search queries`);
+      updatedPendingPools[poolId] = {
+        ...pendingPool,
+        failed:
+          pendingPool.failed || pendingPool.evidenceSearchQueries.length === 0,
+      };
+      continue;
+    }
 
-      const evidenceList: Evidence[] = [];
+    const evidenceList: Evidence[] = [];
 
-      const searchSysMsg = new SystemMessage(
+    const evidencePrompt = ChatPromptTemplate.fromMessages([
+      [
+        "system",
         `You are a search assistant that finds and summarizes relevant evidence.
         For the given search query, return information from reliable sources.
         
         BETTING CONTEXT:
-        What users are betting on: ${pendingPool.pool.question}
+        What users are betting on: {question}
         
-        Options: ${pendingPool.pool.options}
-        
-        Your response must be a JSON object with these fields and nothing else:
-        {
-            "url": "source URL",
-            "summary": "brief summary of relevant information from the source",
-            "search_query": "the search query that found this evidence"
-        }
-        
+        Options: {options}
+
         Guidelines:
         - Only include sources that are directly relevant
         - Summarize the key points in 2-3 sentences
-        - Prefer recent sources from reputable outlets`
-      );
+        - Prefer recent sources from reputable outlets`,
+      ],
+      [
+        "human",
+        `SEARCH QUERY: {query}
 
-      // Process search queries for this pool
-      for (const query of pendingPool.evidenceSearchQueries) {
-        try {
-          // Use Tavily to gather evidence
-          const searchDocs = await tavilySearch.invoke(query);
+        SOURCE URL: {url}
+        
+        CONTENT: {content}`,
+      ],
+    ]);
 
-          for (const doc of searchDocs) {
-            const searchUserMsg = new HumanMessage(
-              `SEARCH QUERY: ${query}
-              
-              SOURCE URL: ${doc.url || ""}
-              CONTENT: ${doc.pageContent || ""}
+    // Process search queries for this pool
+    for (const query of pendingPool.evidenceSearchQueries) {
+      try {
+        // Use Tavily to gather evidence
+        console.log(
+          `Searching for evidence for pool ${poolId} with query: ${query}`
+        );
+        //TODO Tool gave me trouble, using the client directly for now.
+        const searchDocsRaw = await tavilyClient.search(query, {
+          maxResults: 3,
+        });
+        const searchDocs = searchDocsRaw.results;
+        // const searchDocs =
+        // await tavilySearch.invoke(query);
 
-              Please analyze and summarize this search result in the context of the betting pool.`
-            );
-
-            const resultJson = await config.large_llm.invoke([
-              searchSysMsg,
-              searchUserMsg,
-            ]);
-
-            // Parse the result
-            let result: Evidence;
-            if (typeof resultJson.content === "string") {
-              result = JSON.parse(resultJson.content);
-            } else {
-              result = resultJson.content as any;
+        console.log("searchDocs", searchDocs);
+        console.log("searchDocs[0]", searchDocs[0]);
+        console.log(typeof searchDocs[0]);
+        console.log(`Found ${searchDocs.length} search results`);
+        for (const doc of searchDocs) {
+          // Create structured LLM
+          const structuredLlm = config.large_llm.withStructuredOutput(
+            evidenceSchema,
+            {
+              name: "gatherEvidence",
             }
-
-            if (!result.search_query) {
-              result.search_query = query;
-            }
-
-            evidenceList.push(result);
-          }
-        } catch (error) {
-          console.error(
-            `Error processing query '${query}' for pool ${poolId}:`,
-            error
           );
-          continue;
+
+          // Format the prompt with the search and document information
+          const formattedPrompt = await evidencePrompt.formatMessages({
+            question: pendingPool.pool.question,
+            options: pendingPool.pool.options,
+            query: query,
+            url: doc.url || "",
+            content: doc.content || "",
+          });
+
+          // Call the LLM with the formatted prompt
+          const result = await structuredLlm.invoke(formattedPrompt);
+          console.log(
+            `Search result summary for ${doc.url}: ${JSON.stringify(result)}`
+          );
+
+          // If search_query is missing (shouldn't happen with schema validation), add it
+          if (!result.search_query) {
+            result.search_query = query;
+          }
+
+          evidenceList.push(result);
         }
+      } catch (error) {
+        console.error(
+          `Error processing query '${query}' for pool ${poolId}:`,
+          error
+        );
+        continue;
       }
-
-      console.log(
-        `Gathered ${evidenceList.length} pieces of evidence for pool ${poolId}`
-      );
-
-      // Return updated pool with evidence
-      return [
-        poolId,
-        {
-          ...pendingPool,
-          evidence: evidenceList,
-        },
-      ] as [string, PendingPool];
     }
-  );
 
-  // Wait for all pools to be processed
-  const processedPools = await Promise.all(pendingPoolsPromises);
+    console.log(
+      `Gathered ${evidenceList.length} pieces of evidence for pool ${poolId}`
+    );
 
-  // Reconstruct the pendingPools object
-  const updatedPendingPools = Object.fromEntries(processedPools);
+    // Return updated pool with evidence
+    updatedPendingPools[poolId] = {
+      ...pendingPool,
+      evidence: evidenceList,
+    };
+  }
 
   return { pendingPools: updatedPendingPools };
 }

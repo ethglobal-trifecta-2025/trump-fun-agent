@@ -4,18 +4,18 @@
     "": {
       "name": "trump-fun-agent",
       "dependencies": {
-        "@graphql-codegen/typescript-graphql-request": "^6.2.0",
         "@langchain/anthropic": "^0.3.15",
         "@langchain/community": "^0.3.36",
         "@langchain/core": "^0.3.42",
         "@langchain/langgraph": "^0.2.57",
         "@langchain/openai": "^0.4.5",
         "@supabase/supabase-js": "^2.49.1",
-        "@tavily/core": "^0.3.2",
+        "@tavily/core": "^0.3.3",
         "@wagmi/chains": "^1.8.0",
         "axios": "^1.8.4",
         "dotenv": "^16.4.7",
         "graphql": "^16.10.0",
+        "graphql-request": "^7.1.2",
         "http-proxy-agent": "^7.0.2",
         "langchain": "^0.3.19",
         "puppeteer": "^24.4.0",
@@ -30,6 +30,7 @@
         "@graphql-codegen/cli": "5.0.5",
         "@graphql-codegen/client-preset": "4.6.3",
         "@graphql-codegen/introspection": "4.0.3",
+        "@graphql-codegen/typescript-graphql-request": "^6.2.0",
         "@graphql-codegen/typescript-operations": "^4.5.1",
         "@graphql-typed-document-node/core": "^3.2.0",
         "@types/bun": "latest",
@@ -347,7 +348,7 @@
 
     "@supabase/supabase-js": ["@supabase/supabase-js@2.49.1", "", { "dependencies": { "@supabase/auth-js": "2.68.0", "@supabase/functions-js": "2.4.4", "@supabase/node-fetch": "2.6.15", "@supabase/postgrest-js": "1.19.2", "@supabase/realtime-js": "2.11.2", "@supabase/storage-js": "2.7.1" } }, "sha512-lKaptKQB5/juEF5+jzmBeZlz69MdHZuxf+0f50NwhL+IE//m4ZnOeWlsKRjjsM0fVayZiQKqLvYdBn0RLkhGiQ=="],
 
-    "@tavily/core": ["@tavily/core@0.3.2", "", { "dependencies": { "axios": "^1.7.7", "js-tiktoken": "^1.0.14" } }, "sha512-2Zh0Z00cb/2jXME9CAK0l225ENczY9TYcAo748gEMoZCtdfWrU321XeU3hQSv7yr+P3t1lc+WdJ+iOgfm42JEA=="],
+    "@tavily/core": ["@tavily/core@0.3.3", "", { "dependencies": { "axios": "^1.7.7", "js-tiktoken": "^1.0.14" } }, "sha512-Dn1TvtVo/btPDWXnH+bhlQxj+YGW0rkM1PUNBxJeEnjHBbuhjjDsibiqoe/wObMzrF44+gBB59NJ3MNduVTjMw=="],
 
     "@tokenizer/token": ["@tokenizer/token@0.3.0", "", {}, "sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A=="],
 
@@ -851,7 +852,7 @@
 
     "graphql-config": ["graphql-config@5.1.3", "", { "dependencies": { "@graphql-tools/graphql-file-loader": "^8.0.0", "@graphql-tools/json-file-loader": "^8.0.0", "@graphql-tools/load": "^8.0.0", "@graphql-tools/merge": "^9.0.0", "@graphql-tools/url-loader": "^8.0.0", "@graphql-tools/utils": "^10.0.0", "cosmiconfig": "^8.1.0", "jiti": "^2.0.0", "minimatch": "^9.0.5", "string-env-interpolation": "^1.0.1", "tslib": "^2.4.0" }, "peerDependencies": { "cosmiconfig-toml-loader": "^1.0.0", "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0" }, "optionalPeers": ["cosmiconfig-toml-loader"] }, "sha512-RBhejsPjrNSuwtckRlilWzLVt2j8itl74W9Gke1KejDTz7oaA5kVd6wRn9zK9TS5mcmIYGxf7zN7a1ORMdxp1Q=="],
 
-    "graphql-request": ["graphql-request@6.1.0", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.2.0", "cross-fetch": "^3.1.5" }, "peerDependencies": { "graphql": "14 - 16" } }, "sha512-p+XPfS4q7aIpKVcgmnZKhMNqhltk20hfXtkaIkTfjjmiKMJ5xrt5c743cL03y/K7y1rg3WrIC49xGiEQ4mxdNw=="],
+    "graphql-request": ["graphql-request@7.1.2", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.2.0" }, "peerDependencies": { "graphql": "14 - 16" } }, "sha512-+XE3iuC55C2di5ZUrB4pjgwe+nIQBuXVIK9J98wrVwojzDW3GMdSBZfxUk8l4j9TieIpjpggclxhNEU9ebGF8w=="],
 
     "graphql-tag": ["graphql-tag@2.12.6", "", { "dependencies": { "tslib": "^2.1.0" }, "peerDependencies": { "graphql": "^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0" } }, "sha512-FdSNcu2QQcWnM2VNvSCCDCVS5PpPqpzgFT8+GXzqJuoDd0CBncxCY278u4mhRO7tMgo2JjgJA5aZ+nWSQ/Z+xg=="],
 
@@ -1612,6 +1613,8 @@
     "@graphql-codegen/visitor-plugin-common/tslib": ["tslib@2.6.3", "", {}, "sha512-xNvxJEOUiWPGhUuUdQgAJPKOOJfGnIyKySOc09XkKsgdUV/3E2zvwZYdejjmRgPCgcym1juLH3226yA7sEFJKQ=="],
 
     "@graphql-tools/import/resolve-from": ["resolve-from@5.0.0", "", {}, "sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw=="],
+
+    "@graphql-tools/prisma-loader/graphql-request": ["graphql-request@6.1.0", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.2.0", "cross-fetch": "^3.1.5" }, "peerDependencies": { "graphql": "14 - 16" } }, "sha512-p+XPfS4q7aIpKVcgmnZKhMNqhltk20hfXtkaIkTfjjmiKMJ5xrt5c743cL03y/K7y1rg3WrIC49xGiEQ4mxdNw=="],
 
     "@humanfs/node/@humanwhocodes/retry": ["@humanwhocodes/retry@0.3.1", "", {}, "sha512-JBxkERygn7Bv/GbN5Rv8Ul6LVknS+5Bp6RgDC/O8gEBU/yeH5Ui5C/OlWrTb6qct7LjjfT6Re2NxB0ln0yYybA=="],
 

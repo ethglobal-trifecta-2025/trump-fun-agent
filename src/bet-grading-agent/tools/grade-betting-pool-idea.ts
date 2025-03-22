@@ -136,6 +136,7 @@ export async function gradeBettingPoolIdea(
           result = resultJson.content as any;
         }
 
+        console.log("result.result", result.result);
         // Determine the result code based on the grading output
         if (result.result === "not resolved yet") {
           result.result_code = 0; // NOT READY TO GRADE

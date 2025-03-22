@@ -24,9 +24,17 @@ export async function upsertTruthSocialPosts(
       `Upserting ${researchItems.length} Truth Social posts to database concurrently`
     );
 
+    // Filter out items that should not be processed
+    const itemsToProcess = researchItems.filter(
+      (item) => item.shouldProcess !== false
+    );
+    console.log(
+      `${itemsToProcess.length} out of ${researchItems.length} items will be processed`
+    );
+
     // Prepare the records for upsert
     const records: Database["public"]["Tables"]["truth_social_posts"]["Insert"][] =
-      researchItems.map((item) => ({
+      itemsToProcess.map((item) => ({
         post_id: item.truthSocialPost.id,
         pool_id: item.poolId || null,
         string_content: JSON.stringify(item.truthSocialPost),
@@ -34,6 +42,12 @@ export async function upsertTruthSocialPosts(
         transaction_hash: item.transactionHash || "",
         created_at: new Date().toISOString(),
       }));
+
+    // If no items to process, return early
+    if (records.length === 0) {
+      console.log("No records to upsert after filtering");
+      return { research: researchItems };
+    }
 
     // Split records into batches for concurrent processing
     // Supabase has limits on batch size, so we'll process in smaller chunks

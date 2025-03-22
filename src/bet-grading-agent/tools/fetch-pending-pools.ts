@@ -1,6 +1,5 @@
-import axios from "axios";
-import { gql, type DocumentType } from "../../types/__generated__";
-import type { FetchPendingPoolsDocument } from "../../types/__generated__/graphql";
+import { request } from "graphql-request";
+import { gql } from "../../types/__generated__";
 import type { GraderState, PendingPool } from "../betting-grader-graph";
 /**
  * Fetches pools with "PENDING" status from the GraphQL endpoint
@@ -27,27 +26,23 @@ export async function fetchPendingPools(
   console.log("Fetching pending pools...");
 
   const chainConfig = state.chainConfig;
-  // Define the GraphQL query to fetch pending pools
+
   try {
-    // Send the POST request to GraphQL endpoint
-    const response = await axios.post<{
-      data: DocumentType<typeof FetchPendingPoolsDocument>;
-    }>(chainConfig.subgraphUrl, {
-      query: fetchPendingPoolsQuery,
+    // Send the GraphQL request using graphql-request
+    const response = await request({
+      url: chainConfig.subgraphUrl,
+      document: fetchPendingPoolsQuery,
+      requestHeaders: {
+        Authorization: `Bearer ${chainConfig.subgraphApiKey}`,
+      },
     });
 
-    console.log("Response data:");
-    console.log(response.data);
-    console.log(response.data.data);
-    console.log(response.data.data.pools);
-    console.log(response.data.data.pools[0]);
-    console.log("--------------------------------");
     // Extract the pools from the response
-    const pools = response.data.data.pools;
+    const pools = response.pools;
     console.log(`Found ${pools.length} pending pools`);
 
     return {
-      pendingPools: pools.reduce(
+      pendingPools: pools.slice(0, 1).reduce(
         (acc, pool) => {
           acc[pool.id] = {
             pool,

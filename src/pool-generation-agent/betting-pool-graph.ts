@@ -1,5 +1,7 @@
 import { BaseMessage } from "@langchain/core/messages";
 import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
+import type { BettingChainConfig } from "../config";
+import { DEFAULT_CHAIN_ID, config } from "../config";
 import type { ResearchItem } from "../types/research-item";
 import { createBettingPools } from "./tools/create-betting-pools";
 import { filterProcessedTruthSocialPosts } from "./tools/filter-processed-truth-social-posts";
@@ -16,6 +18,10 @@ const AgentStateAnnotation = Annotation.Root({
   tavilySearchResults: Annotation<object>, //TODO get a better type here
   newsApiSearchResults: Annotation<object>, //TODO get a better type here
   newsApiSearchFailed: Annotation<boolean>,
+  chainConfig: Annotation<BettingChainConfig>({
+    value: (curr, update) => update,
+    default: () => config.chainConfig[DEFAULT_CHAIN_ID],
+  }),
   research: Annotation<ResearchItem[]>({
     reducer: (curr, update) => {
       // Create a map of existing items by some unique identifier (assuming id exists)
@@ -45,7 +51,11 @@ export type AgentState = typeof AgentStateAnnotation.State;
 // Function to check if there are posts to process
 function checkHasPosts(state: AgentState): "has_posts" | "no_posts" {
   const research = state.research || [];
-  return research.length > 0 ? "has_posts" : "no_posts";
+  // Check if there are any posts marked for processing
+  const hasProcessablePosts = research.some(
+    (item) => item.shouldProcess === true
+  );
+  return hasProcessablePosts ? "has_posts" : "no_posts";
 }
 
 // Create the graph

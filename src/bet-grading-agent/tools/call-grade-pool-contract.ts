@@ -18,9 +18,6 @@ export async function callGradePoolContract(
     return { pendingPools: {} };
   }
 
-  //TODO not sure we actually need this
-  const gasLimit = parseInt(process.env.GAS_LIMIT || "3000000");
-
   try {
     // Set up viem clients
     const account = privateKeyToAccount(chainConfig.privateKey);
@@ -59,7 +56,7 @@ export async function callGradePoolContract(
             abi: bettingContractAbi,
             functionName: "gradeBet",
             args: [BigInt(poolId), BigInt(result_code)],
-            gas: BigInt(gasLimit),
+            // gas: BigInt(3000000),
           });
 
           // Wait for the transaction to be confirmed
