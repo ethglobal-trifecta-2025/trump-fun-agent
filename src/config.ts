@@ -73,7 +73,7 @@ export const config = {
   small_llm,
   large_llm,
   fluxApiKey: requireEnv("BFL_API_KEY"),
-  maxImagesPerRun: Number(process.env.MAX_IMAGES_PER_RUN || "999"),
+  maxImagesPerRun: Number(process.env.MAX_IMAGES_PER_RUN || "3"),
   fluxModel: process.env.FLUX_MODEL || "flux-dev",
   chainConfig: {
     [baseSepolia.id]: {
