@@ -68,6 +68,7 @@ builder
 
 // Compile the graph
 export const bettingGraderGraph = builder.compile();
+bettingGraderGraph.name = "trump-fun-bet-grading-agent";
 
 // Export a function to run a single node for testing
 export async function runSingleNode(

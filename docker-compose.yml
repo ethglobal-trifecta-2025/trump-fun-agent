@@ -1,0 +1,61 @@
+services:
+  langgraph-redis:
+    image: redis:6
+    healthcheck:
+      test: redis-cli ping
+      start_period: 10s
+      timeout: 1s
+      retries: 5
+      interval: 60s
+      start_interval: 1s
+  langgraph-postgres:
+    image: pgvector/pgvector:pg16
+    expose:
+      - "5432"
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=vector
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - langgraph-data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U postgres
+      start_period: 10s
+      timeout: 1s
+      retries: 5
+      interval: 60s
+      start_interval: 1s
+  langgraph-api:
+    ports:
+      - "8000"
+    environment:
+      REDIS_URI: redis://langgraph-redis:6379
+      POSTGRES_URI: postgres://postgres:postgres@langgraph-postgres:5432/postgres?sslmode=disable
+    depends_on:
+      langgraph-redis:
+        condition: service_healthy
+      langgraph-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: python /api/healthcheck.py
+      interval: 60s
+      start_interval: 1s
+      start_period: 10s
+    pull_policy: build
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM langchain/langgraphjs-api:20
+        ADD . /deps/trump-fun-agent
+        ENV LANGSERVE_GRAPHS='{"pool-creation-agent":"./src/pool-generation-agent/betting-pool-graph.ts:bettingPoolGeneratorGraph"}'
+        WORKDIR /deps/trump-fun-agent
+        RUN npm ci
+        RUN (test ! -f /api/langgraph_api/js/build.mts && echo "Prebuild script not found, skipping") || tsx /api/langgraph_api/js/build.mts
+    env_file: .env
+volumes:
+  langgraph-data:
+    driver: local

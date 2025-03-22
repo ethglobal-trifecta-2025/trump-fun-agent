@@ -14,7 +14,6 @@
     "@graphql-codegen/cli": "5.0.5",
     "@graphql-codegen/client-preset": "4.6.3",
     "@graphql-codegen/introspection": "4.0.3",
-    "@graphql-codegen/typescript-graphql-request": "^6.2.0",
     "@graphql-codegen/typescript-operations": "^4.5.1",
     "@graphql-typed-document-node/core": "^3.2.0",
     "@types/bun": "latest",

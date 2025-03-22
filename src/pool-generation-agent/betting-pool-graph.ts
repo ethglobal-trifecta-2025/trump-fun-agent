@@ -82,7 +82,7 @@ builder
 
 // Compile the graph
 export const bettingPoolGeneratorGraph = builder.compile();
-
+bettingPoolGeneratorGraph.name = "trump-fun-pool-creation-agent";
 // Export a function to run a single node for testing
 export async function runSingleNode(
   nodeName: keyof typeof bettingPoolGeneratorGraph.nodes,

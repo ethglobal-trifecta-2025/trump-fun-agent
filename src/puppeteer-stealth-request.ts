@@ -2,7 +2,6 @@
 import { Browser, ConsoleMessage, HTTPResponse } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import config from "./config";
 
 // Add stealth plugin to puppeteer
 puppeteer.use(StealthPlugin());
@@ -106,21 +105,21 @@ export async function fetchWithPuppeteer(url: string) {
 }
 
 // Run the function if this file is executed directly
-if (require.main === module) {
-  const trumpAccountUrl = `${config.truthSocialApiUrl}/accounts/${config.trumpTruthSocialId}/statuses`;
-  console.log(`Starting fetching data...`);
+// if (require.main === module) {
+//   const trumpAccountUrl = `${config.truthSocialApiUrl}/accounts/${config.trumpTruthSocialId}/statuses`;
+//   console.log(`Starting fetching data...`);
 
-  fetchWithPuppeteer(trumpAccountUrl)
-    .then((responseData) => {
-      if (responseData) {
-        console.log("\nRequest completed successfully");
-        console.log(`Retrieved ${responseData.length || 0} posts`);
-      } else {
-        console.error("\nRequest failed: No response data received");
-      }
-    })
-    .catch((error) => console.error("\nRequest failed:", error));
-}
+//   fetchWithPuppeteer(trumpAccountUrl)
+//     .then((responseData) => {
+//       if (responseData) {
+//         console.log("\nRequest completed successfully");
+//         console.log(`Retrieved ${responseData.length || 0} posts`);
+//       } else {
+//         console.error("\nRequest failed: No response data received");
+//       }
+//     })
+//     .catch((error) => console.error("\nRequest failed:", error));
+// }
 
 // Export the fetchWithPuppeteer function as default
 export default { fetchWithPuppeteer };

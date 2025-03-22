@@ -34,3 +34,10 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # Finder (MacOS) folder config
 .DS_Store
 
+# Because I was having trouble w/ system pip installing the langgraph cli
+venv
+
+# Because I'm using this to preview output from langgraph new
+demo/
+# LangGraph API
+.langgraph_api
