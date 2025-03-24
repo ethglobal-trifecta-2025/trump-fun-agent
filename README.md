@@ -1,3 +1,9 @@
+# THIS IS A BRANCH STAGING FIXES SHOULD WE BE SELECTED AS FINALISTS, PLEASE DO NOT MERGE THIS BRANCH INTO MAIN, PLEASE DO NOT INCLUDE IN JUDGING
+
+## If you see the above in main and Trifecta is ongoing, roll back whatever you did
+
+## If you see the above in main and Trifecta is over, please delete it
+
 # trump-fun-agent
 
 ## Environment Setup
@@ -27,11 +33,11 @@ bun run run-bet-grading-agent.ts
 Check the crontab w/ `crontab -e` to see the commands that are being run
 
 Run the following to see the logs for either agent
+
 ```bash
 tail -f /root/trump-fun-agent/run-pool-creation-agent.log
 tail -f /root/trump-fun-agent/run-bet-grading-agent.log
 ```
-
 
 ## LangSmith
 
