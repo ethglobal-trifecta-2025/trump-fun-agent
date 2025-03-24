@@ -1,6 +1,6 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { z } from "zod";
-import config from "../../config";
+import config, { supabase } from "../../config";
 import type { ResearchItem } from "../../types/research-item";
 import type { AgentState } from "../betting-pool-graph";
 
@@ -10,6 +10,19 @@ const imagePromptSchema = z.object({
     .string()
     .describe("Generated prompt for Flux AI image generation"),
 });
+
+/**
+ * Extracts a filename from a prompt
+ * Creates a simple filename based on the first few words of the prompt plus timestamp
+ */
+function generateFilenameFromPrompt(prompt: string): string {
+  const timestamp = new Date().getTime();
+  // Get the first few words
+  const words = prompt.split(" ").slice(0, 4).join("-");
+  // Replace special characters
+  const cleanWords = words.replace(/[^a-zA-Z0-9-]/g, "");
+  return `${cleanWords.substring(0, 50)}-${timestamp}.jpg`;
+}
 
 /**
  * Generates image prompts and images for betting pool ideas using Anthropic and Flux.ai
@@ -179,7 +192,7 @@ Please generate an image prompt for Flux AI.`,
         console.log(`Flux API request submitted with ID: ${requestId}`);
 
         // Poll for the result
-        let imageUrl = null;
+        let fluxImageUrl = null;
         let attempts = 0;
         const maxAttempts = 30; // Maximum 15 seconds (30 attempts * 500ms)
 
@@ -213,8 +226,8 @@ Please generate an image prompt for Flux AI.`,
           };
 
           if (result.status === "Ready" && result.result) {
-            imageUrl = result.result.sample;
-            console.log(`Image generated successfully: ${imageUrl}`);
+            fluxImageUrl = result.result.sample;
+            console.log(`Image generated successfully: ${fluxImageUrl}`);
             break;
           } else if (result.status === "Error") {
             throw new Error(
@@ -228,21 +241,67 @@ Please generate an image prompt for Flux AI.`,
           attempts++;
         }
 
-        if (!imageUrl) {
+        if (!fluxImageUrl) {
           throw new Error("Timed out waiting for image generation");
         }
+
+        // Now download the image from Flux and upload to Supabase
+        console.log("Downloading image from Flux...");
+        const imageResponse = await fetch(fluxImageUrl);
+
+        if (!imageResponse.ok) {
+          throw new Error(
+            `Failed to download image: ${imageResponse.status} ${imageResponse.statusText}`
+          );
+        }
+
+        // Get the image as blob
+        const imageBlob = await imageResponse.blob();
+
+        // Convert blob to array buffer and then to Buffer for Supabase
+        const arrayBuffer = await imageBlob.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        // Generate a filename based on the prompt
+        const filename = generateFilenameFromPrompt(imagePrompt);
+        const filepath = `trump-images/${filename}`;
+
+        console.log(`Uploading image to Supabase at path: ${filepath}`);
+
+        // Upload to Supabase
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("trump-fun")
+          .upload(filepath, buffer, {
+            contentType: "image/jpeg",
+            upsert: true,
+          });
+
+        if (uploadError) {
+          throw new Error(
+            `Failed to upload image to Supabase: ${uploadError.message}`
+          );
+        }
+
+        // Get the public URL
+        const { data: publicUrlData } = supabase.storage
+          .from("trump-fun")
+          .getPublicUrl(filepath);
+
+        const supabaseImageUrl = publicUrlData.publicUrl;
+
+        console.log(`Image uploaded to Supabase: ${supabaseImageUrl}`);
 
         // Update the research item with the image prompt and URL
         const updatedItem: ResearchItem = {
           ...currentItem,
           imagePrompt,
-          imageUrl,
+          imageUrl: supabaseImageUrl, // Store Supabase URL instead of Flux URL
         };
 
         updatedResearch[itemIndex] = updatedItem;
 
         console.log(
-          `Research item ${i + 1} updated with image URL: ${imageUrl}`
+          `Research item ${i + 1} updated with Supabase image URL: ${supabaseImageUrl}`
         );
       } catch (error) {
         console.error(

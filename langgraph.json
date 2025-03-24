@@ -3,7 +3,8 @@
   "dockerfile_lines": [],
   "dependencies": ["."],
   "graphs": {
-    "pool-creation-agent": "./src/pool-generation-agent/betting-pool-graph.ts:bettingPoolGeneratorGraph"
+    "pool-creation-agent": "./src/pool-generation-agent/betting-pool-graph.ts:bettingPoolGeneratorGraph",
+    "bet-grading-agent": "./src/bet-grading-agent/betting-grader-graph.ts:bettingGraderGraph"
   },
   "env": ".env"
 }
