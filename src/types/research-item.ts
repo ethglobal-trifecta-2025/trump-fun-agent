@@ -18,3 +18,18 @@ export interface ResearchItem {
   image_prompt?: string; // Generated prompt for image creation
   image_url?: string | null; // URL of the generated image
 }
+
+export interface SingleResearchItem {
+  truth_social_post: TruthSocialPost;
+  betting_pool_idea?: string;
+  related_news_search_query?: string;
+  related_news_search_results?: string[];
+  related_tavily_search_query?: string;
+  related_tavily_search_results?: string[];
+  transaction_hash?: string | null; // Blockchain transaction hash from creating the betting pool
+  pool_id?: string | null; // ID of the betting pool on the smart contract
+  should_process?: boolean; // Flag to indicate if this item should be processed further
+  skip_reason?: string; // Reason why the item was marked for skipping (e.g., "already_processed", "too_old")
+  image_prompt?: string; // Generated prompt for image creation
+  image_url?: string | null; // URL of the generated image
+}
