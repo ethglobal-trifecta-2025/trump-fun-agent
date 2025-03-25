@@ -1,3 +1,10 @@
+/**
+ * 
+ * IMPORTANT: THIS TOOL IS NOT BEING USED RIGHT NOW, DO NOT MODIFY IF YOU'RE DEALING WITH A PRODUCTION ISSUE
+ * IT'S A STARTING POINT TO TRAIN OTHER TEAM MEMBERS ON THE AGENT CODE 
+ * Learning session scheduled for Mar. 26th. 
+ * Please remove this comment after the single research subgraph is fully implemented
+ */
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { z } from "zod";
 import config from "../../config";
