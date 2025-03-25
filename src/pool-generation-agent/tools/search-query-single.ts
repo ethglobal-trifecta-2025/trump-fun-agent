@@ -8,7 +8,7 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { z } from "zod";
 import config from "../../config";
-import type { SingleResearchItemState } from "../betting-pool-graph";
+import type { SingleResearchItemState } from "../single-betting-pool-graph";
 
 // Define schema for search query
 const searchQuerySchema = z.object({

@@ -7,7 +7,7 @@
  */
 import axios from "axios";
 import config from "../../config";
-import type { SingleResearchItemState } from "../betting-pool-graph";
+import type { SingleResearchItemState } from "../single-betting-pool-graph";
 
 interface NewsApiParams {
   q: string; // Search query

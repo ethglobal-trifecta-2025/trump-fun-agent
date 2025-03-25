@@ -7,7 +7,7 @@
  */
 import { supabase } from "../../config";
 import type { Database, Json } from "../../types/database.types";
-import type { SingleResearchItemState } from "../betting-pool-graph";
+import type { SingleResearchItemState } from "../single-betting-pool-graph";
 
 /**
  * Upserts a single Truth Social post into the database
