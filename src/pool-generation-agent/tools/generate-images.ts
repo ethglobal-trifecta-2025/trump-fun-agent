@@ -45,8 +45,9 @@ export async function generateImages(
   try {
     // Filter research items to only process those marked with shouldProcess: true
     // and that have a betting pool idea
+    console.log("RESEARCH_ITEMS", researchItems);
     const itemsToProcess = researchItems.filter(
-      (item) => item.shouldProcess === true && item.bettingPoolIdea
+      (item) => item.should_process === true && item.betting_pool_idea
     );
 
     console.log(
@@ -117,19 +118,56 @@ Please generate an image prompt for Flux AI.`,
       if (!currentItem) continue;
 
       const itemIndex = researchItems.findIndex(
-        (item) => item.truthSocialPost.id === currentItem.truthSocialPost.id
+        (item) => item.truth_social_post.id === currentItem.truth_social_post.id
       );
 
       if (itemIndex === -1) continue; // Shouldn't happen, but just in case
 
       try {
         console.log(
+          `Processing image for research item ${i + 1}/${itemsToGenerateImagesFor.length}`
+        );
+
+        // Check if the item already has an image URL from the database
+        // Check both snake_case (from DB) and camelCase (from the object) property names
+        const hasImageUrl =
+          ("image_url" in currentItem &&
+            typeof currentItem.image_url === "string" &&
+            currentItem.image_url.length > 0) ||
+          (typeof currentItem.image_url === "string" &&
+            currentItem.image_url.length > 0);
+
+        if (hasImageUrl) {
+          const existingImageUrl =
+            "image_url" in currentItem &&
+            typeof currentItem.image_url === "string"
+              ? currentItem.image_url
+              : (currentItem.image_url as string);
+
+          console.log(
+            `Using existing image URL from database: ${existingImageUrl}`
+          );
+
+          // Assign to camelCase imageUrl and continue processing
+          const updatedItem: ResearchItem = {
+            ...currentItem,
+            image_url: existingImageUrl,
+          };
+
+          updatedResearch[itemIndex] = updatedItem;
+          console.log(`Research item ${i + 1} updated with existing image URL`);
+
+          // Skip to the next item
+          continue;
+        }
+
+        console.log(
           `Generating image for research item ${i + 1}/${itemsToGenerateImagesFor.length}`
         );
 
         // Extract the betting pool idea and truth social post content
-        const bettingPoolIdea = currentItem.bettingPoolIdea;
-        const truthSocialPost = currentItem.truthSocialPost.content.replace(
+        const bettingPoolIdea = currentItem.betting_pool_idea;
+        const truthSocialPost = currentItem.truth_social_post.content.replace(
           /<\/?[^>]+(>|$)/g,
           ""
         ); // Remove HTML tags
@@ -294,8 +332,14 @@ Please generate an image prompt for Flux AI.`,
         // Update the research item with the image prompt and URL
         const updatedItem: ResearchItem = {
           ...currentItem,
-          imagePrompt,
-          imageUrl: supabaseImageUrl, // Store Supabase URL instead of Flux URL
+          image_prompt: imagePrompt,
+          image_url: supabaseImageUrl, // Store Supabase URL instead of Flux URL
+          // Preserve other important fields that might have been set by previous steps
+          transaction_hash: currentItem.transaction_hash,
+          pool_id: currentItem.pool_id,
+          betting_pool_idea: currentItem.betting_pool_idea,
+          should_process: currentItem.should_process,
+          skip_reason: currentItem.skip_reason,
         };
 
         updatedResearch[itemIndex] = updatedItem;
@@ -309,10 +353,16 @@ Please generate an image prompt for Flux AI.`,
           error
         );
         // Mark the item as should not process with reason for failure
+        // But preserve all other fields
         const updatedItem: ResearchItem = {
           ...currentItem,
-          shouldProcess: false,
-          skipReason: "failed_image_generation",
+          should_process: false,
+          skip_reason: "failed_image_generation",
+          // Preserve other important fields
+          transaction_hash: currentItem.transaction_hash,
+          pool_id: currentItem.pool_id,
+          betting_pool_idea: currentItem.betting_pool_idea,
+          image_url: currentItem.image_url,
         };
         updatedResearch[itemIndex] = updatedItem;
         console.log(

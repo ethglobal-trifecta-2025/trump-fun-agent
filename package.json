@@ -7,7 +7,11 @@
     "start": "bun run index.ts",
     "test:full": "source .env && bun run test-trump-agent.ts",
     "test:node": "source .env && bun run test-trump-agent.ts",
-    "codegen": "graphql-codegen"
+    "codegen": "graphql-codegen",
+    "dev": "bun run index.ts",
+    "generate-noise": "bun run generate-noise.ts",
+    "generate-pool": "bun run generate-pool.ts",
+    "reply-to-trump": "bun run reply-to-trump.ts"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

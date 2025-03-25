@@ -6,6 +6,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import contractABI from "../../../artifacts/BettingContract.json";
+import type { ResearchItem } from "../../types/research-item";
 import type { AgentState } from "../betting-pool-graph";
 
 /**
@@ -52,7 +53,7 @@ export async function createBettingPools(
   try {
     // Filter research items to only process those marked with shouldProcess: true
     const itemsToProcess = researchItems.filter(
-      (item) => item.shouldProcess === true && item.bettingPoolIdea
+      (item) => item.should_process === true && item.betting_pool_idea
     );
 
     console.log(
@@ -67,7 +68,10 @@ export async function createBettingPools(
     }
 
     // Create a function to process each research item and create a betting pool
-    const processResearchItem = async (item: any, index: number) => {
+    const processResearchItem = async (
+      item: ResearchItem,
+      index: number
+    ): Promise<ResearchItem> => {
       // Add a random delay to prevent rate limiting (100-300ms)
       const jitter = Math.floor(Math.random() * 200) + 100; // 100-300ms
       await new Promise((resolve) => setTimeout(resolve, jitter));
@@ -78,7 +82,7 @@ export async function createBettingPools(
         }`
       );
 
-      if (!item.bettingPoolIdea) {
+      if (!item.betting_pool_idea) {
         console.warn(
           `No betting pool idea found for item ${index + 1}, skipping`
         );
@@ -97,12 +101,12 @@ export async function createBettingPools(
       const closureInstructions = `This prediction resolves by ${formattedResolutionDate}. Grade as YES if the predicted event occurs by the resolution date, and NO otherwise. Use verifiable public sources to determine the outcome.`;
 
       const createPoolParams = {
-        question: item.bettingPoolIdea,
+        question: item.betting_pool_idea,
         options: ["Yes", "No"] as [string, string],
         betsCloseAt: betsCloseAt,
         closureCriteria: closureCriteria,
         closureInstructions: closureInstructions,
-        originalTruthSocialPostId: item.truthSocialPost?.id?.toString() || "",
+        originalTruthSocialPostId: item.truth_social_post?.id?.toString() || "",
       };
       console.log("createPoolParams", createPoolParams);
 
@@ -131,6 +135,12 @@ export async function createBettingPools(
         );
 
         if (receipt.status === "success") {
+          // Always add the transaction hash for successful transactions
+          let updatedItem = {
+            ...item,
+            transaction_hash: hash,
+          } satisfies ResearchItem;
+
           // Parse the logs to get the poolId
           const logs = parseEventLogs({
             abi: contractABI.abi,
@@ -145,13 +155,18 @@ export async function createBettingPools(
               `Pool created for item ${index + 1}, poolId: ${poolId}`
             );
 
-            // Update the research item with the transaction hash and pool ID
-            return {
-              ...item,
-              transactionHash: hash,
-              poolId: poolId.toString(),
-            };
+            // Add pool ID to the already updated item
+            updatedItem = {
+              ...updatedItem,
+              pool_id: poolId.toString(),
+            } satisfies ResearchItem;
+          } else {
+            console.log(
+              `No pool ID found in logs for item ${index + 1}, but transaction was successful`
+            );
           }
+          console.log("updatedItem", updatedItem.transaction_hash);
+          return updatedItem;
         }
 
         return item;
@@ -172,7 +187,7 @@ export async function createBettingPools(
       if (!currentItem) continue;
 
       const itemIndex = researchItems.findIndex(
-        (item) => item.truthSocialPost.id === currentItem.truthSocialPost.id
+        (item) => item.truth_social_post.id === currentItem.truth_social_post.id
       );
 
       if (itemIndex === -1) continue; // Shouldn't happen, but just in case
@@ -192,6 +207,26 @@ export async function createBettingPools(
     console.log(
       `Created betting pools for ${itemsToProcess.length} research items`
     );
+
+    console.log(
+      "UPDATED_RESEARCH",
+      updatedResearch.map((item) => item.transaction_hash)
+    );
+
+    // Log which items have transaction hashes and which don't
+    console.log(
+      "Items with transaction hashes:",
+      updatedResearch.filter((item) => item.transaction_hash).length
+    );
+    console.log(
+      "Items without transaction hashes:",
+      updatedResearch.filter((item) => !item.transaction_hash).length
+    );
+
+    // Detailed log of each item
+    updatedResearch.forEach((item, i) => {
+      console.log(`Item ${i} transaction_hash:`, item.transaction_hash);
+    });
 
     return {
       research: updatedResearch,

@@ -1,11 +1,15 @@
+import dotenv from "dotenv";
 import "dotenv/config";
 import { GraphQLClient, gql } from "graphql-request";
+import path from "path";
 import { setTimeout } from "timers/promises";
 import { createPublicClient, createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 import { bettingContractAbi, erc20Abi } from "./src/types/contract.types";
 
+dotenv.config({ path: path.join(__dirname, ".env") });
+console.log(path.join(__dirname, ".env"));
 // GraphQL query to get pools
 const GET_POOLS_QUERY = gql`
   query GetPools(
@@ -340,11 +344,9 @@ const placeBet = async (
       // Increment nonce for next transaction
       accountNonces[account.address] = currentNonce + 1n;
 
-      console.log(`Transaction hash: ${hash}`);
 
       // Wait for transaction receipt to check for success
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
-      console.log(`Transaction status: ${receipt.status}`);
 
       return hash;
     } catch (error: any) {

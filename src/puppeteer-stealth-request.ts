@@ -51,7 +51,7 @@ export async function fetchWithPuppeteer(url: string) {
         if (response.status() === 200) {
           try {
             const data = await response.json();
-            console.log("\nAPI Response Data from event:");
+            // console.log("\nAPI Response Data from event:");
             console.log(JSON.stringify(data, null, 2));
             // Store response data
             responseData = data;
@@ -78,8 +78,8 @@ export async function fetchWithPuppeteer(url: string) {
           // If we already have data from the event, use that
           if (!responseData) {
             responseData = await response.json();
-            console.log("\nAPI Response Data:");
-            console.log(JSON.stringify(responseData, null, 2));
+            // console.log("\nAPI Response Data:");
+            // console.log(JSON.stringify(responseData, null, 2));
           }
           return responseData;
         } catch (e) {

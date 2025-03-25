@@ -37,7 +37,7 @@ export async function getLatestTruthSocialPosts(
 
       // Initialize research array with Truth Social posts
       const researchItems: ResearchItem[] = truthSocialPosts.map((post) => ({
-        truthSocialPost: post,
+        truth_social_post: post,
       }));
 
       console.log(
