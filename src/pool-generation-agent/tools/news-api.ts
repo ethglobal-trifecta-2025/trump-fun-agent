@@ -37,9 +37,7 @@ function getDefaultDates(): { from: string; to: string } {
  * Function to call the News API
  */
 export async function newsApiSearchFunction(state: AgentState) {
-  console.log("newsApiSearch", state);
-  console.log("newsApiSearchQuery", state.newsApiSearchQuery);
-
+  console.log("newsApiSearchFunction", state.newsApiSearchQuery);
   if (!state.newsApiSearchQuery) {
     return {
       newsApiSearchResults: "No search query available.",

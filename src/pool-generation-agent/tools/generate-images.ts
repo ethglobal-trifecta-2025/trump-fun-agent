@@ -1,6 +1,6 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { z } from "zod";
-import config from "../../config";
+import config, { supabase } from "../../config";
 import type { ResearchItem } from "../../types/research-item";
 import type { AgentState } from "../betting-pool-graph";
 
@@ -10,6 +10,19 @@ const imagePromptSchema = z.object({
     .string()
     .describe("Generated prompt for Flux AI image generation"),
 });
+
+/**
+ * Extracts a filename from a prompt
+ * Creates a simple filename based on the first few words of the prompt plus timestamp
+ */
+function generateFilenameFromPrompt(prompt: string): string {
+  const timestamp = new Date().getTime();
+  // Get the first few words
+  const words = prompt.split(" ").slice(0, 4).join("-");
+  // Replace special characters
+  const cleanWords = words.replace(/[^a-zA-Z0-9-]/g, "");
+  return `${cleanWords.substring(0, 50)}-${timestamp}.jpg`;
+}
 
 /**
  * Generates image prompts and images for betting pool ideas using Anthropic and Flux.ai
@@ -32,8 +45,9 @@ export async function generateImages(
   try {
     // Filter research items to only process those marked with shouldProcess: true
     // and that have a betting pool idea
+    console.log("RESEARCH_ITEMS", researchItems);
     const itemsToProcess = researchItems.filter(
-      (item) => item.shouldProcess === true && item.bettingPoolIdea
+      (item) => item.should_process === true && item.betting_pool_idea
     );
 
     console.log(
@@ -104,19 +118,56 @@ Please generate an image prompt for Flux AI.`,
       if (!currentItem) continue;
 
       const itemIndex = researchItems.findIndex(
-        (item) => item.truthSocialPost.id === currentItem.truthSocialPost.id
+        (item) => item.truth_social_post.id === currentItem.truth_social_post.id
       );
 
       if (itemIndex === -1) continue; // Shouldn't happen, but just in case
 
       try {
         console.log(
+          `Processing image for research item ${i + 1}/${itemsToGenerateImagesFor.length}`
+        );
+
+        // Check if the item already has an image URL from the database
+        // Check both snake_case (from DB) and camelCase (from the object) property names
+        const hasImageUrl =
+          ("image_url" in currentItem &&
+            typeof currentItem.image_url === "string" &&
+            currentItem.image_url.length > 0) ||
+          (typeof currentItem.image_url === "string" &&
+            currentItem.image_url.length > 0);
+
+        if (hasImageUrl) {
+          const existingImageUrl =
+            "image_url" in currentItem &&
+            typeof currentItem.image_url === "string"
+              ? currentItem.image_url
+              : (currentItem.image_url as string);
+
+          console.log(
+            `Using existing image URL from database: ${existingImageUrl}`
+          );
+
+          // Assign to camelCase imageUrl and continue processing
+          const updatedItem: ResearchItem = {
+            ...currentItem,
+            image_url: existingImageUrl,
+          };
+
+          updatedResearch[itemIndex] = updatedItem;
+          console.log(`Research item ${i + 1} updated with existing image URL`);
+
+          // Skip to the next item
+          continue;
+        }
+
+        console.log(
           `Generating image for research item ${i + 1}/${itemsToGenerateImagesFor.length}`
         );
 
         // Extract the betting pool idea and truth social post content
-        const bettingPoolIdea = currentItem.bettingPoolIdea;
-        const truthSocialPost = currentItem.truthSocialPost.content.replace(
+        const bettingPoolIdea = currentItem.betting_pool_idea;
+        const truthSocialPost = currentItem.truth_social_post.content.replace(
           /<\/?[^>]+(>|$)/g,
           ""
         ); // Remove HTML tags
@@ -179,7 +230,7 @@ Please generate an image prompt for Flux AI.`,
         console.log(`Flux API request submitted with ID: ${requestId}`);
 
         // Poll for the result
-        let imageUrl = null;
+        let fluxImageUrl = null;
         let attempts = 0;
         const maxAttempts = 30; // Maximum 15 seconds (30 attempts * 500ms)
 
@@ -213,8 +264,8 @@ Please generate an image prompt for Flux AI.`,
           };
 
           if (result.status === "Ready" && result.result) {
-            imageUrl = result.result.sample;
-            console.log(`Image generated successfully: ${imageUrl}`);
+            fluxImageUrl = result.result.sample;
+            console.log(`Image generated successfully: ${fluxImageUrl}`);
             break;
           } else if (result.status === "Error") {
             throw new Error(
@@ -228,21 +279,73 @@ Please generate an image prompt for Flux AI.`,
           attempts++;
         }
 
-        if (!imageUrl) {
+        if (!fluxImageUrl) {
           throw new Error("Timed out waiting for image generation");
         }
+
+        // Now download the image from Flux and upload to Supabase
+        console.log("Downloading image from Flux...");
+        const imageResponse = await fetch(fluxImageUrl);
+
+        if (!imageResponse.ok) {
+          throw new Error(
+            `Failed to download image: ${imageResponse.status} ${imageResponse.statusText}`
+          );
+        }
+
+        // Get the image as blob
+        const imageBlob = await imageResponse.blob();
+
+        // Convert blob to array buffer and then to Buffer for Supabase
+        const arrayBuffer = await imageBlob.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        // Generate a filename based on the prompt
+        const filename = generateFilenameFromPrompt(imagePrompt);
+        const filepath = `trump-images/${filename}`;
+
+        console.log(`Uploading image to Supabase at path: ${filepath}`);
+
+        // Upload to Supabase
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("trump-fun")
+          .upload(filepath, buffer, {
+            contentType: "image/jpeg",
+            upsert: true,
+          });
+
+        if (uploadError) {
+          throw new Error(
+            `Failed to upload image to Supabase: ${uploadError.message}`
+          );
+        }
+
+        // Get the public URL
+        const { data: publicUrlData } = supabase.storage
+          .from("trump-fun")
+          .getPublicUrl(filepath);
+
+        const supabaseImageUrl = publicUrlData.publicUrl;
+
+        console.log(`Image uploaded to Supabase: ${supabaseImageUrl}`);
 
         // Update the research item with the image prompt and URL
         const updatedItem: ResearchItem = {
           ...currentItem,
-          imagePrompt,
-          imageUrl,
+          image_prompt: imagePrompt,
+          image_url: supabaseImageUrl, // Store Supabase URL instead of Flux URL
+          // Preserve other important fields that might have been set by previous steps
+          transaction_hash: currentItem.transaction_hash,
+          pool_id: currentItem.pool_id,
+          betting_pool_idea: currentItem.betting_pool_idea,
+          should_process: currentItem.should_process,
+          skip_reason: currentItem.skip_reason,
         };
 
         updatedResearch[itemIndex] = updatedItem;
 
         console.log(
-          `Research item ${i + 1} updated with image URL: ${imageUrl}`
+          `Research item ${i + 1} updated with Supabase image URL: ${supabaseImageUrl}`
         );
       } catch (error) {
         console.error(
@@ -250,10 +353,16 @@ Please generate an image prompt for Flux AI.`,
           error
         );
         // Mark the item as should not process with reason for failure
+        // But preserve all other fields
         const updatedItem: ResearchItem = {
           ...currentItem,
-          shouldProcess: false,
-          skipReason: "failed_image_generation",
+          should_process: false,
+          skip_reason: "failed_image_generation",
+          // Preserve other important fields
+          transaction_hash: currentItem.transaction_hash,
+          pool_id: currentItem.pool_id,
+          betting_pool_idea: currentItem.betting_pool_idea,
+          image_url: currentItem.image_url,
         };
         updatedResearch[itemIndex] = updatedItem;
         console.log(

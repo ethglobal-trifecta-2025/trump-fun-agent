@@ -18,6 +18,7 @@ export async function upsertTruthSocialPosts(
       research: [],
     };
   }
+ 
 
   try {
     console.log(
@@ -26,24 +27,46 @@ export async function upsertTruthSocialPosts(
 
     // Filter out items that should not be processed
     const itemsToProcess = researchItems.filter(
-      (item) => item.shouldProcess !== false
+      (item) => item.should_process !== false
     );
     console.log(
       `${itemsToProcess.length} out of ${researchItems.length} items will be processed`
     );
 
+    // Add more detailed debugging for each research item
+    console.log("Detailed research items:");
+    itemsToProcess.forEach((item, index) => {
+      console.log(`Item ${index}:`, {
+        id: item.truth_social_post?.id,
+        pool_id: item.pool_id,
+        transaction_hash: item.transaction_hash,
+        should_process: item.should_process,
+      });
+    });
+
     // Prepare the records for upsert
     const records: Database["public"]["Tables"]["truth_social_posts"]["Insert"][] =
-      itemsToProcess.map((item) => ({
-        post_id: item.truthSocialPost.id,
-        pool_id: item.poolId || null,
-        string_content: JSON.stringify(item.truthSocialPost),
-        json_content: JSON.parse(JSON.stringify(item.truthSocialPost)) as Json, //TODO: This chain offends me
-        transaction_hash: item.transactionHash || "",
-        created_at: new Date().toISOString(),
-        image_url: item.imageUrl || null,
-        prompt_data: JSON.parse(JSON.stringify(item)) as Json,
-      }));
+      itemsToProcess.map((item) => {
+        // Explicitly log and extract the transaction hash
+        const txHash = item.transaction_hash || null;
+        console.log(
+          `Item ${item.truth_social_post.id} transaction hash:`,
+          txHash
+        );
+
+        return {
+          post_id: item.truth_social_post.id,
+          pool_id: item.pool_id,
+          string_content: JSON.stringify(item.truth_social_post),
+          json_content: JSON.parse(
+            JSON.stringify(item.truth_social_post)
+          ) as Json, //TODO: This chain offends me
+          transaction_hash: txHash,
+          created_at: new Date().toISOString(),
+          image_url: item.image_url || null,
+          prompt_data: JSON.parse(JSON.stringify(item)) as Json,
+        };
+      });
 
     // If no items to process, return early
     if (records.length === 0) {

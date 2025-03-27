@@ -24,20 +24,16 @@ export async function filterProcessedTruthSocialPosts(
 
   try {
     // Extract post IDs from the research items
-    const postIds = researchItems.map((item) => item.truthSocialPost.id);
+    const postIds = researchItems.map((item) => item.truth_social_post.id);
 
-    console.log(
-      `Checking if any of ${postIds.length} posts have been processed already`
-    );
-    // Query Supabase for posts with non-null and non-empty transaction_hash
-    const { data: existingPosts, error } = await supabase
+    console.log(`Checking Supabase for ${postIds.length} posts`);
+
+    // Query Supabase for all matching posts, without filtering on transaction_hash
+    const { data: supabasePosts, error } = await supabase
       .from("truth_social_posts")
-      .select("post_id, pool_id, transaction_hash")
-      .in("post_id", postIds)
-      .not("transaction_hash", "is", null)
-      .not("transaction_hash", "eq", "");
+      .select("*")
+      .in("post_id", postIds);
 
-    console.log("existingPosts", existingPosts);
     if (error) {
       console.error("Error querying Supabase:", error);
       return {
@@ -45,37 +41,48 @@ export async function filterProcessedTruthSocialPosts(
       };
     }
 
-    // Extract existing post IDs
-    const existingPostIds = existingPosts?.map((post) => post.post_id) || [];
-
     console.log(
-      `Found ${existingPostIds.length} posts that have already been processed`
+      `Found ${supabasePosts?.length || 0} matching posts in Supabase`
     );
 
-    // Clone and mark already processed posts instead of filtering them out
+    // Merge Supabase data with research items and set processing flags
     const updatedResearch = researchItems.map((item) => {
-      const existingPost = existingPosts?.find(
-        (post) => post.post_id === item.truthSocialPost.id
+      const supabasePost = supabasePosts?.find(
+        (post) => post.post_id === item.truth_social_post.id
       );
-      if (existingPost) {
-        console.log(
-          `Marking post ${item.truthSocialPost.id} as already processed`
-        );
-        return {
-          ...item,
-          poolId: existingPost.pool_id || item.poolId,
-          transactionHash:
-            existingPost.transaction_hash || item.transactionHash,
-          shouldProcess: false,
-          skipReason: "already_processed",
-        };
-      }
-      return item;
-    });
 
-    console.log(
-      `Marked ${existingPostIds.length} research items as already processed`
-    );
+      if (supabasePost) {
+        // If post exists in Supabase and has a transaction hash, mark as should not process
+        const hasTransactionHash =
+          supabasePost.transaction_hash &&
+          supabasePost.transaction_hash.trim() !== "";
+
+        if (hasTransactionHash) {
+          console.log(
+            `Marking post ${item.truth_social_post.id} as already processed (has transaction hash)`
+          );
+          return {
+            ...item,
+            ...supabasePost,
+            should_process: false,
+            skip_reason: "already_processed",
+          };
+        } else {
+          // Post exists in Supabase but has no transaction hash, add Supabase data but keep processing
+          return {
+            ...item,
+            ...supabasePost,
+            should_process: true,
+          };
+        }
+      }
+
+      // Post not in Supabase yet, mark as should process
+      return {
+        ...item,
+        should_process: true,
+      };
+    });
 
     // Filter out posts older than a 24 hours (also by marking them)
     const currentTime = new Date();
@@ -84,7 +91,7 @@ export async function filterProcessedTruthSocialPosts(
 
     const finalResearch = updatedResearch.map((item) => {
       // Skip if already marked for not processing
-      if (item.shouldProcess === false) {
+      if (item.should_process === false) {
         return item;
       }
 
@@ -98,7 +105,7 @@ export async function filterProcessedTruthSocialPosts(
       //   );
       //   return {
       //     ...item,
-      //     shouldProcess: false,
+      //     should_process: false,
       //     skipReason: "too_old",
       //   };
       // }
@@ -106,13 +113,13 @@ export async function filterProcessedTruthSocialPosts(
       // Mark valid posts explicitly
       return {
         ...item,
-        shouldProcess: true,
+        should_process: true,
       };
     });
 
     // Count how many items are marked for processing
     const processingCount = finalResearch.filter(
-      (item) => item.shouldProcess === true
+      (item) => item.should_process === true
     ).length;
     console.log(
       `${processingCount} research items will be processed after filtering`

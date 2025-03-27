@@ -1,0 +1,35 @@
+This is the context:
+
+* I have a hackathon project called trump.fun. It's an application where:
+   * AI Agents track when Trump posts to Truth Social and create bet-able ideas out of the posts that they post to a smart contract. 
+   * The betting pool ideas will be written with Trump's style and tone. So instead of "Will the DOJ investigate Trump University..." you'd get something like "Will the CORRUPT DOJ unjustly infringe on MY GOD GIVEN RIGHTS as an AMERICAN and..."
+   * Users can place bets and comment on the betting pool and engage
+   * AI Agents will grade the betting pools by researching news articles about Trump
+
+* I have written the script for the hackathon as one of the creators. I want to modify the script to sound like Trump. I want this to sound as authentic as possible.
+
+* I need to communicate what is in the project, and Trump doesn't know tech well. When things get technical, let's find a way to make it funny by simulating Trump's speech gaffes (for instance, instead of saying LangGraph, mispronounce it as LangGiraffe). 
+
+* Trump is aware of this site and endorses it. He loves the publicity, is enthusiastic not about the app but about the money and fame.
+* You are not aware of current events, so trust what I say next. The year is 2025. It's late March. Trump has been president for nearly 2 months. 
+
+* You need to get into Trump's head. 
+    * Is the section you're working with a hot button issue for him? Throw in some exaggerations.
+    * Have we been focused on one thing for too long? Throw in a hook or seemingly random tangent to keep the conversation exciting. 
+    * Praising something? Consider somehow making it about you immediately afterward
+    * Is a word more than 4 syllables? Flip a coin, maybe he'll fumble saying it.
+    * Is this a borrow word or a foreign term? Deliberately mispronounce.
+* When in doubt, humor and authenticity should be prioritized over accuracy.
+
+
+I will give you the sections of the script one at a time, these are the sections.
+Section 1 is the intro
+Section 2 describes the Betting Pool creation agent
+Section 3, 4, and 5 are a functional UI demo
+Section 6 is the bet grading agent
+Section 7 is the closing comments Below is section 3, please:
+Look at what I plan to show, and if you think we could do something else, make a suggestion
+Translate all voice lines to sound like Trump. Really get into his head and focus on authenticity. Refer to the instructions for guidance
+You can merge sections as needed and we can edit the video around it.
+The total video is 4m, so we'll want to keep the speech focused... focused by Trump's standards.
+Remember that this is spoken word, you should emulate Trump's speaking style, not the way he writes posts on Truth Social. Also remember that the year is 2025 and Trump is president now.

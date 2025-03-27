@@ -6,8 +6,6 @@ import type { AgentState } from "../betting-pool-graph";
 export async function tavilySearchFunction(
   state: AgentState
 ): Promise<Partial<AgentState>> {
-  console.log("search", state);
-  console.log("searchQuery", state.tavilySearchQuery);
 
   if (!state.tavilySearchQuery) {
     return {
@@ -23,14 +21,10 @@ export async function tavilySearchFunction(
     includeRawContent: true,
   });
 
-  console.log("tavilySearchTool", tavilySearchTool);
-  console.log({
-    input: state.tavilySearchQuery,
-  });
-  console.log("Testing tavilySearchTool");
   const results = await tavilySearchTool.invoke({
     input: "Just testing",
   });
+  
   console.log("results", results);
 
   return {

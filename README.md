@@ -76,6 +76,7 @@ crontab -e
 ## Log Monitoring
 
 Monitor agent activity logs:
+
 ```bash
 tail -f /root/trump-fun-agent/run-pool-creation-agent.log
 tail -f /root/trump-fun-agent/run-bet-grading-agent.log

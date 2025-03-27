@@ -174,7 +174,7 @@ Write a very brief response (MUST be under 50 words and 2 sentences max) in Dona
         }
 
         // Add a small delay to prevent rate limiting
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (commentError) {
         console.error(`Error processing comment ${comment.id}:`, commentError);
       }

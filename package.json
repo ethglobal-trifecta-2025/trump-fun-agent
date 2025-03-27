@@ -7,7 +7,11 @@
     "start": "bun run index.ts",
     "test:full": "source .env && bun run test-trump-agent.ts",
     "test:node": "source .env && bun run test-trump-agent.ts",
-    "codegen": "graphql-codegen"
+    "codegen": "graphql-codegen",
+    "dev": "bun run index.ts",
+    "generate-noise": "bun run generate-noise.ts",
+    "generate-pool": "bun run generate-pool.ts",
+    "reply-to-trump": "bun run reply-to-trump.ts"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -32,6 +36,7 @@
     "@langchain/openai": "^0.4.5",
     "@supabase/supabase-js": "^2.49.1",
     "@tavily/core": "^0.3.3",
+    "@types/uuid": "^10.0.0",
     "@wagmi/chains": "^1.8.0",
     "axios": "^1.8.4",
     "dotenv": "^16.4.7",
@@ -44,6 +49,7 @@
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "socks-proxy-agent": "^8.0.5",
     "undici": "^7.5.0",
+    "uuid": "^11.1.0",
     "viem": "^2.23.13"
   }
 }

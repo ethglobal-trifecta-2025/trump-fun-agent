@@ -6,7 +6,6 @@ import { ChatAnthropic } from "@langchain/anthropic";
 import { createClient } from "@supabase/supabase-js";
 import { baseSepolia, type Chain } from "viem/chains";
 import type { Database } from "./types/database.types";
-
 export const DEFAULT_CHAIN_ID = baseSepolia.id;
 
 export type BettingChainConfig = {
@@ -60,6 +59,15 @@ const large_llm = new ChatAnthropic({
   modelName: "claude-3-7-sonnet-20250219",
   anthropicApiKey: anthropicApiKey,
 });
+
+// const small_llm = new ChatOpenAI({
+//   modelName: "gpt-4o-mini",
+//   openAIApiKey: openaiApiKey,
+// });
+// const large_llm = new ChatOpenAI({
+//   modelName: "gpt-4o",
+//   openAIApiKey: openaiApiKey,
+// });
 
 const fluxModel = process.env.FLUX_MODEL || "flux-dev";
 if (

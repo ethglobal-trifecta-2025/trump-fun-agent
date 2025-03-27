@@ -1,4 +1,5 @@
 import config from "../../config";
+import type { ResearchItem } from "../../types/research-item";
 import type { AgentState } from "../betting-pool-graph";
 
 /**
@@ -24,7 +25,7 @@ export async function generateBettingPoolIdeas(
 
     // Filter research items to only process those marked with shouldProcess: true
     const itemsToProcess = researchItems.filter(
-      (item) => item.shouldProcess === true
+      (item) => item.should_process === true
     );
 
     console.log(
@@ -39,13 +40,13 @@ export async function generateBettingPoolIdeas(
     }
 
     // Process each research item in parallel
-    const updatedResearchPromises = itemsToProcess.map(async (item) => {
+    const updatedResearchPromises: Promise<ResearchItem>[] = itemsToProcess.map(async (item) => {
       console.log(
-        `Generating betting idea for post: ${item.truthSocialPost.id}`
+        `Generating betting idea for post: ${item.truth_social_post.id}`
       );
 
       // Extract key content from the post
-      const postContent = item.truthSocialPost.content.replace(
+      const postContent = item.truth_social_post.content.replace(
         /<\/?[^>]+(>|$)/g,
         ""
       ); // Remove HTML tags
@@ -53,7 +54,7 @@ export async function generateBettingPoolIdeas(
       console.log(`Post content: ${postContent.substring(0, 100)}...`);
 
       // Get timestamps for post creation and current time
-      const postCreatedAt = new Date(item.truthSocialPost.created_at);
+      const postCreatedAt = new Date(item.truth_social_post.created_at);
       const currentTime = new Date();
 
       // Format dates for the prompt
@@ -66,11 +67,11 @@ export async function generateBettingPoolIdeas(
       const sevenDaysFormatted = sevenDaysFromNow.toLocaleString();
 
       // Include any existing research data in the prompt
-      const newsInfo = item.relatedNews
-        ? `Related news: ${item.relatedNews.join(", ")}`
+      const newsInfo = item.related_news
+        ? `Related news: ${item.related_news.join(", ")}`
         : "No related news yet";
-      const searchInfo = item.relatedSearchResults
-        ? `Related search results: ${item.relatedSearchResults.join(", ")}`
+      const searchInfo = item.related_search_results
+        ? `Related search results: ${item.related_search_results.join(", ")}`
         : "No search results yet";
 
       const prompt = `
@@ -128,7 +129,7 @@ Format your answer as a single Yes/No question with no additional text.
       // Return updated research item with the betting pool idea
       return {
         ...item,
-        bettingPoolIdea,
+        betting_pool_idea: bettingPoolIdea,
       };
     });
 
